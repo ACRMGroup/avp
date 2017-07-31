@@ -1,0 +1,790 @@
+#!rasmol -script
+# File: crambin.ras
+# Creator: Inpharmatica iRasMol 1.0
+
+load pdb "1crn_0.0.both"
+background [0,0,0]
+set ambient 40
+set specular off
+
+reset
+slab off
+rotate z -38
+rotate y -22
+rotate x 54
+
+set bonds off
+set axes off
+set boundingbox off
+set unitcell off
+set bondmode and
+dots off
+
+
+# Avoid Colour Problems!
+select all
+colour bonds none
+colour backbone none
+colour hbonds none
+colour ssbonds none
+colour ribbons none
+colour white
+
+# Atoms
+select (atomno>=1) and (atomno<=327)
+colour atoms [255,255,255]
+select (atomno>=2000) and (atomno<=2562)
+colour atoms [0,0,255]
+select (atomno>=2563) and (atomno<=2569)
+colour atoms [0,34,255]
+select atomno=2570
+colour atoms [0,68,255]
+select (atomno>=2571) and (atomno<=2572)
+colour atoms [0,102,255]
+select (atomno>=2573) and (atomno<=2574)
+colour atoms [0,136,255]
+select (atomno>=2575) and (atomno<=2576)
+colour atoms [0,170,255]
+select (atomno>=2577) and (atomno<=2578)
+colour atoms [0,204,255]
+select (atomno>=2579) and (atomno<=2581)
+colour atoms [0,238,255]
+select (atomno>=2582) and (atomno<=2587)
+colour atoms [0,255,239]
+select (atomno>=2588) and (atomno<=2589)
+colour atoms [0,255,205]
+select (atomno>=2590) and (atomno<=2591)
+colour atoms [0,255,170]
+select (atomno>=2592) and (atomno<=2595)
+colour atoms [0,255,136]
+select (atomno>=2596) and (atomno<=2602)
+colour atoms [0,255,102]
+select (atomno>=2603) and (atomno<=2606)
+colour atoms [0,255,68]
+select (atomno>=2607) and (atomno<=2609)
+colour atoms [0,255,34]
+select (atomno>=2610) and (atomno<=2612)
+colour atoms [0,255,0]
+select atomno=2613
+colour atoms [33,255,0]
+select (atomno>=2614) and (atomno<=2670)
+colour atoms [67,255,0]
+select (atomno>=2671) and (atomno<=2673)
+colour atoms [101,255,0]
+select atomno=2674
+colour atoms [135,255,0]
+select (atomno>=2675) and (atomno<=2678)
+colour atoms [170,255,0]
+select (atomno>=2679) and (atomno<=2680)
+colour atoms [204,255,0]
+select (atomno>=2681) and (atomno<=2682)
+colour atoms [238,255,0]
+select atomno=2683
+colour atoms [255,239,0]
+select (atomno>=2684) and (atomno<=2685)
+colour atoms [255,205,0]
+select (atomno>=2686) and (atomno<=2687)
+colour atoms [255,171,0]
+select atomno=2688
+colour atoms [255,137,0]
+select (atomno>=2689) and (atomno<=2698)
+colour atoms [255,103,0]
+select atomno=2699
+colour atoms [255,69,0]
+select (atomno>=2700) and (atomno<=2701)
+colour atoms [255,35,0]
+select atomno=2702
+colour atoms [255,0,0]
+select (atomno>=1) and (atomno<=327)
+spacefill on
+select (atomno>=2000) and (atomno<=2702)
+spacefill 50
+set shadow off
+
+# Bonds
+select all
+wireframe off
+select (atomno=327) or (atomno==321)
+wireframe on
+select (atomno=326) or (atomno==324)
+wireframe on
+select (atomno=325) or (atomno==324)
+wireframe on
+select (atomno=324) or (atomno==323)
+wireframe on
+select (atomno=323) or (atomno==320)
+wireframe on
+select (atomno=322) or (atomno==321)
+wireframe on
+select (atomno=321) or (atomno==320)
+wireframe on
+select (atomno=320) or (atomno==319)
+wireframe on
+select (atomno=319) or (atomno==316)
+wireframe on
+select (atomno=318) or (atomno==315)
+wireframe on
+select (atomno=317) or (atomno==316)
+wireframe on
+select (atomno=316) or (atomno==315)
+wireframe on
+select (atomno=315) or (atomno==314)
+wireframe on
+select (atomno=314) or (atomno==304)
+wireframe on
+select (atomno=313) or (atomno==312)
+wireframe on
+select (atomno=312) or (atomno==310)
+wireframe on
+select (atomno=312) or (atomno==311)
+wireframe on
+select (atomno=311) or (atomno==309)
+wireframe on
+select (atomno=310) or (atomno==308)
+wireframe on
+select (atomno=309) or (atomno==307)
+wireframe on
+select (atomno=308) or (atomno==307)
+wireframe on
+select (atomno=307) or (atomno==306)
+wireframe on
+select (atomno=306) or (atomno==303)
+wireframe on
+select (atomno=305) or (atomno==304)
+wireframe on
+select (atomno=304) or (atomno==303)
+wireframe on
+select (atomno=303) or (atomno==302)
+wireframe on
+select (atomno=302) or (atomno==296)
+wireframe on
+select (atomno=301) or (atomno==299)
+wireframe on
+select (atomno=300) or (atomno==299)
+wireframe on
+select (atomno=299) or (atomno==298)
+wireframe on
+select (atomno=298) or (atomno==295)
+wireframe on
+select (atomno=297) or (atomno==296)
+wireframe on
+select (atomno=296) or (atomno==295)
+wireframe on
+select (atomno=295) or (atomno==294)
+wireframe on
+select (atomno=294) or (atomno==292)
+wireframe on
+select (atomno=293) or (atomno==292)
+wireframe on
+select (atomno=292) or (atomno==291)
+wireframe on
+select (atomno=291) or (atomno==290)
+wireframe on
+select (atomno=290) or (atomno==285)
+wireframe on
+select (atomno=289) or (atomno==283)
+wireframe on
+select (atomno=289) or (atomno==288)
+wireframe on
+select (atomno=288) or (atomno==287)
+wireframe on
+select (atomno=287) or (atomno==284)
+wireframe on
+select (atomno=286) or (atomno==285)
+wireframe on
+select (atomno=285) or (atomno==284)
+wireframe on
+select (atomno=284) or (atomno==283)
+wireframe on
+select (atomno=283) or (atomno==279)
+wireframe on
+select (atomno=282) or (atomno==281)
+wireframe on
+select (atomno=281) or (atomno==278)
+wireframe on
+select (atomno=280) or (atomno==279)
+wireframe on
+select (atomno=279) or (atomno==278)
+wireframe on
+select (atomno=278) or (atomno==277)
+wireframe on
+select (atomno=277) or (atomno==272)
+wireframe on
+select (atomno=276) or (atomno==274)
+wireframe on
+select (atomno=275) or (atomno==274)
+wireframe on
+select (atomno=274) or (atomno==271)
+wireframe on
+select (atomno=273) or (atomno==272)
+wireframe on
+select (atomno=272) or (atomno==271)
+wireframe on
+select (atomno=271) or (atomno==270)
+wireframe on
+select (atomno=270) or (atomno==267)
+wireframe on
+select (atomno=269) or (atomno==266)
+wireframe on
+select (atomno=268) or (atomno==267)
+wireframe on
+select (atomno=267) or (atomno==266)
+wireframe on
+select (atomno=266) or (atomno==265)
+wireframe on
+select (atomno=265) or (atomno==263)
+wireframe on
+select (atomno=264) or (atomno==263)
+wireframe on
+select (atomno=263) or (atomno==262)
+wireframe on
+select (atomno=262) or (atomno==261)
+wireframe on
+select (atomno=261) or (atomno==256)
+wireframe on
+select (atomno=260) or (atomno==259)
+wireframe on
+select (atomno=260) or (atomno==254)
+wireframe on
+select (atomno=259) or (atomno==258)
+wireframe on
+select (atomno=258) or (atomno==255)
+wireframe on
+select (atomno=257) or (atomno==256)
+wireframe on
+select (atomno=256) or (atomno==255)
+wireframe on
+select (atomno=255) or (atomno==254)
+wireframe on
+select (atomno=254) or (atomno==248)
+wireframe on
+select (atomno=253) or (atomno==251)
+wireframe on
+select (atomno=252) or (atomno==250)
+wireframe on
+select (atomno=251) or (atomno==250)
+wireframe on
+select (atomno=250) or (atomno==247)
+wireframe on
+select (atomno=249) or (atomno==248)
+wireframe on
+select (atomno=248) or (atomno==247)
+wireframe on
+select (atomno=247) or (atomno==246)
+wireframe on
+select (atomno=246) or (atomno==240)
+wireframe on
+select (atomno=245) or (atomno==243)
+wireframe on
+select (atomno=244) or (atomno==242)
+wireframe on
+select (atomno=243) or (atomno==242)
+wireframe on
+select (atomno=242) or (atomno==239)
+wireframe on
+select (atomno=241) or (atomno==240)
+wireframe on
+select (atomno=240) or (atomno==239)
+wireframe on
+select (atomno=239) or (atomno==238)
+wireframe on
+select (atomno=238) or (atomno==232)
+wireframe on
+select (atomno=237) or (atomno==235)
+wireframe on
+select (atomno=236) or (atomno==234)
+wireframe on
+select (atomno=235) or (atomno==234)
+wireframe on
+select (atomno=234) or (atomno==231)
+wireframe on
+select (atomno=233) or (atomno==232)
+wireframe on
+select (atomno=232) or (atomno==231)
+wireframe on
+select (atomno=231) or (atomno==230)
+wireframe on
+select (atomno=230) or (atomno==226)
+wireframe on
+select (atomno=229) or (atomno==228)
+wireframe on
+select (atomno=228) or (atomno==225)
+wireframe on
+select (atomno=227) or (atomno==226)
+wireframe on
+select (atomno=226) or (atomno==225)
+wireframe on
+select (atomno=225) or (atomno==224)
+wireframe on
+select (atomno=224) or (atomno==222)
+wireframe on
+select (atomno=223) or (atomno==222)
+wireframe on
+select (atomno=222) or (atomno==221)
+wireframe on
+select (atomno=221) or (atomno==220)
+wireframe on
+select (atomno=220) or (atomno==215)
+wireframe on
+select (atomno=219) or (atomno==217)
+wireframe on
+select (atomno=218) or (atomno==217)
+wireframe on
+select (atomno=217) or (atomno==214)
+wireframe on
+select (atomno=216) or (atomno==215)
+wireframe on
+select (atomno=215) or (atomno==214)
+wireframe on
+select (atomno=214) or (atomno==213)
+wireframe on
+select (atomno=213) or (atomno==203)
+wireframe on
+select (atomno=212) or (atomno==211)
+wireframe on
+select (atomno=211) or (atomno==210)
+wireframe on
+select (atomno=211) or (atomno==209)
+wireframe on
+select (atomno=210) or (atomno==208)
+wireframe on
+select (atomno=209) or (atomno==207)
+wireframe on
+select (atomno=208) or (atomno==206)
+wireframe on
+select (atomno=207) or (atomno==206)
+wireframe on
+select (atomno=206) or (atomno==205)
+wireframe on
+select (atomno=205) or (atomno==202)
+wireframe on
+select (atomno=204) or (atomno==203)
+wireframe on
+select (atomno=203) or (atomno==202)
+wireframe on
+select (atomno=202) or (atomno==201)
+wireframe on
+select (atomno=201) or (atomno==196)
+wireframe on
+select (atomno=200) or (atomno==198)
+wireframe on
+select (atomno=199) or (atomno==198)
+wireframe on
+select (atomno=198) or (atomno==195)
+wireframe on
+select (atomno=197) or (atomno==196)
+wireframe on
+select (atomno=196) or (atomno==195)
+wireframe on
+select (atomno=195) or (atomno==194)
+wireframe on
+select (atomno=194) or (atomno==191)
+wireframe on
+select (atomno=193) or (atomno==190)
+wireframe on
+select (atomno=192) or (atomno==191)
+wireframe on
+select (atomno=191) or (atomno==190)
+wireframe on
+select (atomno=190) or (atomno==189)
+wireframe on
+select (atomno=189) or (atomno==185)
+wireframe on
+select (atomno=188) or (atomno==187)
+wireframe on
+select (atomno=187) or (atomno==184)
+wireframe on
+select (atomno=186) or (atomno==185)
+wireframe on
+select (atomno=185) or (atomno==184)
+wireframe on
+select (atomno=184) or (atomno==183)
+wireframe on
+select (atomno=183) or (atomno==177)
+wireframe on
+select (atomno=182) or (atomno==180)
+wireframe on
+select (atomno=181) or (atomno==179)
+wireframe on
+select (atomno=180) or (atomno==179)
+wireframe on
+select (atomno=179) or (atomno==176)
+wireframe on
+select (atomno=178) or (atomno==177)
+wireframe on
+select (atomno=177) or (atomno==176)
+wireframe on
+select (atomno=176) or (atomno==175)
+wireframe on
+select (atomno=175) or (atomno==172)
+wireframe on
+select (atomno=174) or (atomno==171)
+wireframe on
+select (atomno=173) or (atomno==172)
+wireframe on
+select (atomno=172) or (atomno==171)
+wireframe on
+select (atomno=171) or (atomno==170)
+wireframe on
+select (atomno=170) or (atomno==163)
+wireframe on
+select (atomno=169) or (atomno==167)
+wireframe on
+select (atomno=168) or (atomno==167)
+wireframe on
+select (atomno=167) or (atomno==166)
+wireframe on
+select (atomno=166) or (atomno==165)
+wireframe on
+select (atomno=165) or (atomno==162)
+wireframe on
+select (atomno=164) or (atomno==163)
+wireframe on
+select (atomno=163) or (atomno==162)
+wireframe on
+select (atomno=162) or (atomno==161)
+wireframe on
+select (atomno=161) or (atomno==156)
+wireframe on
+select (atomno=160) or (atomno==154)
+wireframe on
+select (atomno=160) or (atomno==159)
+wireframe on
+select (atomno=159) or (atomno==158)
+wireframe on
+select (atomno=158) or (atomno==155)
+wireframe on
+select (atomno=157) or (atomno==156)
+wireframe on
+select (atomno=156) or (atomno==155)
+wireframe on
+select (atomno=155) or (atomno==154)
+wireframe on
+select (atomno=154) or (atomno==149)
+wireframe on
+select (atomno=153) or (atomno==151)
+wireframe on
+select (atomno=152) or (atomno==151)
+wireframe on
+select (atomno=151) or (atomno==148)
+wireframe on
+select (atomno=150) or (atomno==149)
+wireframe on
+select (atomno=149) or (atomno==148)
+wireframe on
+select (atomno=148) or (atomno==147)
+wireframe on
+select (atomno=147) or (atomno==145)
+wireframe on
+select (atomno=146) or (atomno==145)
+wireframe on
+select (atomno=145) or (atomno==144)
+wireframe on
+select (atomno=144) or (atomno==143)
+wireframe on
+select (atomno=143) or (atomno==138)
+wireframe on
+select (atomno=142) or (atomno==136)
+wireframe on
+select (atomno=142) or (atomno==141)
+wireframe on
+select (atomno=141) or (atomno==140)
+wireframe on
+select (atomno=140) or (atomno==137)
+wireframe on
+select (atomno=139) or (atomno==138)
+wireframe on
+select (atomno=138) or (atomno==137)
+wireframe on
+select (atomno=137) or (atomno==136)
+wireframe on
+select (atomno=136) or (atomno==130)
+wireframe on
+select (atomno=135) or (atomno==133)
+wireframe on
+select (atomno=134) or (atomno==133)
+wireframe on
+select (atomno=133) or (atomno==132)
+wireframe on
+select (atomno=132) or (atomno==129)
+wireframe on
+select (atomno=131) or (atomno==130)
+wireframe on
+select (atomno=130) or (atomno==129)
+wireframe on
+select (atomno=129) or (atomno==128)
+wireframe on
+select (atomno=128) or (atomno==119)
+wireframe on
+select (atomno=127) or (atomno==125)
+wireframe on
+select (atomno=126) or (atomno==125)
+wireframe on
+select (atomno=125) or (atomno==124)
+wireframe on
+select (atomno=124) or (atomno==123)
+wireframe on
+select (atomno=123) or (atomno==122)
+wireframe on
+select (atomno=122) or (atomno==121)
+wireframe on
+select (atomno=121) or (atomno==118)
+wireframe on
+select (atomno=120) or (atomno==119)
+wireframe on
+select (atomno=119) or (atomno==118)
+wireframe on
+select (atomno=118) or (atomno==117)
+wireframe on
+select (atomno=117) or (atomno==113)
+wireframe on
+select (atomno=116) or (atomno==115)
+wireframe on
+select (atomno=115) or (atomno==112)
+wireframe on
+select (atomno=114) or (atomno==113)
+wireframe on
+select (atomno=113) or (atomno==112)
+wireframe on
+select (atomno=112) or (atomno==111)
+wireframe on
+select (atomno=111) or (atomno==106)
+wireframe on
+select (atomno=110) or (atomno==108)
+wireframe on
+select (atomno=109) or (atomno==108)
+wireframe on
+select (atomno=108) or (atomno==105)
+wireframe on
+select (atomno=107) or (atomno==106)
+wireframe on
+select (atomno=106) or (atomno==105)
+wireframe on
+select (atomno=105) or (atomno==104)
+wireframe on
+select (atomno=104) or (atomno==98)
+wireframe on
+select (atomno=103) or (atomno==101)
+wireframe on
+select (atomno=102) or (atomno==101)
+wireframe on
+select (atomno=101) or (atomno==100)
+wireframe on
+select (atomno=100) or (atomno==97)
+wireframe on
+select (atomno=99) or (atomno==98)
+wireframe on
+select (atomno=98) or (atomno==97)
+wireframe on
+select (atomno=97) or (atomno==96)
+wireframe on
+select (atomno=96) or (atomno==87)
+wireframe on
+select (atomno=95) or (atomno==93)
+wireframe on
+select (atomno=95) or (atomno==94)
+wireframe on
+select (atomno=94) or (atomno==92)
+wireframe on
+select (atomno=93) or (atomno==91)
+wireframe on
+select (atomno=92) or (atomno==90)
+wireframe on
+select (atomno=91) or (atomno==90)
+wireframe on
+select (atomno=90) or (atomno==89)
+wireframe on
+select (atomno=89) or (atomno==86)
+wireframe on
+select (atomno=88) or (atomno==87)
+wireframe on
+select (atomno=87) or (atomno==86)
+wireframe on
+select (atomno=86) or (atomno==85)
+wireframe on
+select (atomno=85) or (atomno==79)
+wireframe on
+select (atomno=84) or (atomno==82)
+wireframe on
+select (atomno=83) or (atomno==82)
+wireframe on
+select (atomno=82) or (atomno==81)
+wireframe on
+select (atomno=81) or (atomno==78)
+wireframe on
+select (atomno=80) or (atomno==79)
+wireframe on
+select (atomno=79) or (atomno==78)
+wireframe on
+select (atomno=78) or (atomno==77)
+wireframe on
+select (atomno=77) or (atomno==73)
+wireframe on
+select (atomno=76) or (atomno==75)
+wireframe on
+select (atomno=75) or (atomno==72)
+wireframe on
+select (atomno=74) or (atomno==73)
+wireframe on
+select (atomno=73) or (atomno==72)
+wireframe on
+select (atomno=72) or (atomno==71)
+wireframe on
+select (atomno=71) or (atomno==62)
+wireframe on
+select (atomno=70) or (atomno==68)
+wireframe on
+select (atomno=69) or (atomno==68)
+wireframe on
+select (atomno=68) or (atomno==67)
+wireframe on
+select (atomno=67) or (atomno==66)
+wireframe on
+select (atomno=66) or (atomno==65)
+wireframe on
+select (atomno=65) or (atomno==64)
+wireframe on
+select (atomno=64) or (atomno==61)
+wireframe on
+select (atomno=63) or (atomno==62)
+wireframe on
+select (atomno=62) or (atomno==61)
+wireframe on
+select (atomno=61) or (atomno==60)
+wireframe on
+select (atomno=60) or (atomno==57)
+wireframe on
+select (atomno=59) or (atomno==56)
+wireframe on
+select (atomno=58) or (atomno==57)
+wireframe on
+select (atomno=57) or (atomno==56)
+wireframe on
+select (atomno=56) or (atomno==55)
+wireframe on
+select (atomno=55) or (atomno==50)
+wireframe on
+select (atomno=54) or (atomno==52)
+wireframe on
+select (atomno=53) or (atomno==52)
+wireframe on
+select (atomno=52) or (atomno==49)
+wireframe on
+select (atomno=51) or (atomno==50)
+wireframe on
+select (atomno=50) or (atomno==49)
+wireframe on
+select (atomno=49) or (atomno==48)
+wireframe on
+select (atomno=48) or (atomno==42)
+wireframe on
+select (atomno=47) or (atomno==45)
+wireframe on
+select (atomno=46) or (atomno==44)
+wireframe on
+select (atomno=45) or (atomno==44)
+wireframe on
+select (atomno=44) or (atomno==41)
+wireframe on
+select (atomno=43) or (atomno==42)
+wireframe on
+select (atomno=42) or (atomno==41)
+wireframe on
+select (atomno=41) or (atomno==40)
+wireframe on
+select (atomno=40) or (atomno==36)
+wireframe on
+select (atomno=39) or (atomno==38)
+wireframe on
+select (atomno=38) or (atomno==35)
+wireframe on
+select (atomno=37) or (atomno==36)
+wireframe on
+select (atomno=36) or (atomno==35)
+wireframe on
+select (atomno=35) or (atomno==34)
+wireframe on
+select (atomno=34) or (atomno==29)
+wireframe on
+select (atomno=33) or (atomno==27)
+wireframe on
+select (atomno=33) or (atomno==32)
+wireframe on
+select (atomno=32) or (atomno==31)
+wireframe on
+select (atomno=31) or (atomno==28)
+wireframe on
+select (atomno=30) or (atomno==29)
+wireframe on
+select (atomno=29) or (atomno==28)
+wireframe on
+select (atomno=28) or (atomno==27)
+wireframe on
+select (atomno=27) or (atomno==23)
+wireframe on
+select (atomno=26) or (atomno==25)
+wireframe on
+select (atomno=25) or (atomno==22)
+wireframe on
+select (atomno=24) or (atomno==23)
+wireframe on
+select (atomno=23) or (atomno==22)
+wireframe on
+select (atomno=22) or (atomno==21)
+wireframe on
+select (atomno=21) or (atomno==17)
+wireframe on
+select (atomno=20) or (atomno==19)
+wireframe on
+select (atomno=19) or (atomno==16)
+wireframe on
+select (atomno=18) or (atomno==17)
+wireframe on
+select (atomno=17) or (atomno==16)
+wireframe on
+select (atomno=16) or (atomno==15)
+wireframe on
+select (atomno=15) or (atomno==10)
+wireframe on
+select (atomno=14) or (atomno==12)
+wireframe on
+select (atomno=13) or (atomno==12)
+wireframe on
+select (atomno=12) or (atomno==9)
+wireframe on
+select (atomno=11) or (atomno==10)
+wireframe on
+select (atomno=10) or (atomno==9)
+wireframe on
+select (atomno=9) or (atomno==8)
+wireframe on
+select (atomno=8) or (atomno==3)
+wireframe on
+select (atomno=7) or (atomno==5)
+wireframe on
+select (atomno=6) or (atomno==5)
+wireframe on
+select (atomno=5) or (atomno==2)
+wireframe on
+select (atomno=4) or (atomno==3)
+wireframe on
+select (atomno=3) or (atomno==2)
+wireframe on
+select (atomno=2) or (atomno==1)
+wireframe on
+
+# Ribbons
+select all
+ribbons off
+
+# Backbone
+backbone off
+
+# Labels
+labels off
+
+# Monitors
+monitors off
+
+ssbonds off
+hbonds off

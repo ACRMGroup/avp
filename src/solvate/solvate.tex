@@ -1,0 +1,55 @@
+\documentclass[12pt]{article}
+\usepackage{a4}
+\begin{document}
+For each of the three circles, $i$:
+
+$$ (x-x_i)^2 + (y-y_i)^2 + (z-z_i)^2 = r_i^2 $$
+
+Subtracting circle 1 from circle 3:
+
+$$ (x_3-x_1)x + (y_3-y_1)y + (z_3-z_1)z = f_1 $$
+where:
+$$ f_1 = \frac{(x_3^2 + y_3^2 + z_3^2 - r_3^2) - (x_1^2 + y_1^2 + z_1^2 - r_1^2)}{2} $$
+
+Subtracting circle 2 from circle 3:
+
+$$ (x_3-x_2)x + (y_3-y_2)y + (z_3-z_2)z = f_2 $$
+where:
+$$ f_2 = \frac{(x_3^2 + y_3^2 + z_3^2 - r_3^2) - (x_2^2 + y_2^2 + z_2^2 - r_2^2)}{2} $$
+
+Subtracting circle 1 from circle 2:
+
+$$ (x_2-x_1)x + (y_2-y_1)y + (z_2-z_1)z = f_3 $$
+where:
+$$ f_3 = \frac{(x_2^2 + y_2^2 + z_2^2 - r_2^2) - (x_1^2 + y_1^2 + z_1^2 - r_1^2)}{2} $$
+
+
+We can rewrite these three equations as:
+
+$$ a_1x + b_1y + c_1z = f_1 $$
+$$ a_2x + b_2y + c_2z = f_2 $$
+$$ a_3x + b_3y + c_3z = f_3 $$
+where:
+$$ a_1 = (x_3-x_1) ; b_1 = (y_3-y_1) ; c_1 = (z_3-z_1) $$
+$$ a_2 = (x_3-x_2) ; b_2 = (y_3-y_2) ; c_2 = (z_3-z_2) $$
+$$ a_3 = (x_2-x_1) ; b_3 = (y_2-y_1) ; c_3 = (z_2-z_1) $$
+
+In matrix notation, we can write:
+
+$$
+\bf A = \left[ \begin{array}{lll}a_1&b_1&c_1\\a_2&b_2&c_2\\a_3&b_3&c_3\end{array}\right] ;\;\;
+    x = \left[ \begin{array}{l}x\\y\\z\end{array}\right] ;\;\;
+    b = \left[ \begin{array}{l}f_1\\f_2\\f_3\end{array}\right]
+$$
+
+
+Given that $\bf Ax = b$, we can write:
+$$\bf A^{-1}Ax = A^{-1}b$$
+$$\bf x=A^{-1}b$$
+i.e. we take the inverse of the matrix $\bf A$ and multiply it by the 
+vector $\bf b$ to obtain values for $x,y,z$
+
+\end{document}
+   
+
+

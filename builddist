@@ -1,0 +1,85 @@
+#!/bin/sh
+# Short script to copy the required files from bioplib for creation
+# of a distribution version of ProFit
+# 18.07.95  Original   By: ACRM
+# 17.07.97  Builds a binary distribution as well
+
+BIOP=/home/bsm/martin/bioplib/src/
+PACKAGE=AVP1.3
+SRC=$PACKAGE/src
+DOC=$PACKAGE/doc
+PBIOP=$SRC/bioplib
+
+# Create subdirectories
+if [ -d $PACKAGE ]
+then
+   echo "Got $PACKAGE directory"
+else
+   echo "Creating $PACKAGE directory"
+   mkdir $PACKAGE
+fi
+
+if [ -d $SRC ] 
+then
+   echo "Got source sub-directory"
+else
+   echo "Creating source sub-directory"
+   mkdir $SRC
+fi
+
+if [ -d $DOC ] 
+then
+   echo "Got doc sub-directory"
+else
+   echo "Creating doc sub-directory"
+   mkdir $DOC
+fi
+
+if [ -d $PBIOP ] 
+then
+   echo "Got bioplib sub-directory"
+else
+   echo "Creating bioplib sub-directory"
+   mkdir $PBIOP
+fi
+
+# Copy distribution special files
+cp ./distspecial/COPYING.DOC  $PACKAGE
+cp ./distspecial/INSTALL      $PACKAGE
+cp ./distspecial/Makefile     $SRC
+
+# Copy the documentation files
+cp ./doc/*.tex              $DOC
+cp ./doc/*.bib              $DOC
+cp ./doc/*.pdf              $DOC
+
+# Copy bioplib files into directory
+cp  ${BIOP}/ReadPDB.c           $PBIOP
+cp  ${BIOP}/FindNextResidue.c   $PBIOP
+cp  ${BIOP}/WritePDB.c          $PBIOP
+cp  ${BIOP}/fsscanf.c           $PBIOP
+cp  ${BIOP}/OpenStdFiles.c      $PBIOP
+cp  ${BIOP}/IndexPDB.c          $PBIOP
+cp  ${BIOP}/chindex.c           $PBIOP
+cp  ${BIOP}/padterm.c           $PBIOP
+
+cp  ${BIOP}MathType.h           $PBIOP
+cp  ${BIOP}SysDefs.h            $PBIOP
+cp  ${BIOP}fsscanf.h            $PBIOP
+cp  ${BIOP}general.h            $PBIOP
+cp  ${BIOP}macros.h             $PBIOP
+cp  ${BIOP}pdb.h                $PBIOP
+cp  ${BIOP}port.h               $PBIOP
+
+cp  ${BIOP}/COPYING.DOC         $PBIOP
+
+# Copy source code into directory
+cp ./src/*.c ./src/*.h $SRC
+
+# Tar up the distribution directory
+tar -cvf ${PACKAGE}.tar $PACKAGE
+gzip ${PACKAGE}.tar
+
+# and finally delete the directory
+/bin/rm -rf $PACKAGE
+

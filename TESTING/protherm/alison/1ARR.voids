@@ -1,0 +1,76 @@
+Void:    1 voxelCount:   1 volume:    4.863 midpoint:  -20.932 -10.406  -2.661 Surface-void
+Void:    2 voxelCount:   3 volume:   11.051 midpoint:  -10.432   5.094 -10.661 Surface-void
+Void:    3 voxelCount:   1 volume:    5.122 midpoint:   -9.932   1.594  -8.661 Surface-void
+Void:    4 voxelCount:   1 volume:    4.967 midpoint:   -8.932   1.594  -6.661 Surface-void
+Void:    5 voxelCount:   1 volume:    7.560 midpoint:   -7.932  -1.406  -6.661 Surface-void
+Void:    6 voxelCount:   7 volume:   30.171 midpoint:   -7.432   3.594 -12.161 Surface-void
+Void:    7 voxelCount:  20 volume:   61.956 midpoint:   -6.432   2.094  -5.161 Surface-void
+Void:    8 voxelCount:   5 volume:   23.293 midpoint:   -7.432   7.094 -17.161 Surface-void
+Void:    9 voxelCount:   2 volume:   12.521 midpoint:   -6.932  -6.906  -4.661 Surface-void
+Void:   10 voxelCount:   1 volume:    7.019 midpoint:   -6.932  -4.406  -5.661 Surface-void
+Void:   11 voxelCount:   1 volume:    1.051 midpoint:   -6.932  -0.406  -6.661 Surface-void
+Void:   12 voxelCount:   1 volume:    3.560 midpoint:   -5.932  -8.406  -4.661 Surface-void
+Void:   13 voxelCount:   9 volume:   35.992 midpoint:   -4.432  -0.406 -12.161 Surface-void
+Void:   14 voxelCount:   4 volume:   15.659 midpoint:   -5.432   3.094 -10.161 Surface-void
+Void:   15 voxelCount:   4 volume:   15.669 midpoint:   -5.432   4.594 -13.661  Buried-void
+Void:   16 voxelCount:   2 volume:    9.934 midpoint:   -4.932  -5.906  -3.661 Surface-void
+Void:   17 voxelCount:   2 volume:   12.525 midpoint:   -4.432   0.594  -7.661 Surface-void
+Void:   18 voxelCount:   1 volume:    1.587 midpoint:   -4.932   0.594  -3.661 Surface-void
+Void:   19 voxelCount:  38 volume:   98.119 midpoint:   -1.932   6.594  -5.661 Surface-void
+Void:   20 voxelCount:   4 volume:   13.030 midpoint:   -3.432 -10.406  -2.661 Surface-void
+Void:   21 voxelCount:   2 volume:    4.785 midpoint:   -3.432  -1.406 -11.661 Surface-void
+Void:   22 voxelCount:   2 volume:    4.751 midpoint:   -3.932   1.594 -10.161 Surface-void
+Void:   23 voxelCount:   2 volume:    5.700 midpoint:   -3.432   4.594  -9.661  Buried-void
+Void:   24 voxelCount:   1 volume:    6.778 midpoint:   -3.932   5.594 -14.661  Buried-void
+Void:   25 voxelCount:   1 volume:    8.097 midpoint:   -3.932   7.594 -13.661 Surface-void
+Void:   26 voxelCount:  16 volume:   52.238 midpoint:    0.068  -7.406  -6.161 Surface-void
+Void:   27 voxelCount:   1 volume:    8.061 midpoint:   -2.932  -4.406  -4.661 Surface-void
+Void:   28 voxelCount:   1 volume:   10.839 midpoint:   -2.932   2.594 -16.661 Surface-void
+Void:   29 voxelCount:   1 volume:    6.256 midpoint:   -2.932   5.594 -15.661 Surface-void
+Void:   30 voxelCount:   3 volume:    9.579 midpoint:   -2.432   6.594 -14.161 Surface-void
+Void:   31 voxelCount:   1 volume:    2.770 midpoint:   -1.932  -5.406  -5.661 Surface-void
+Void:   32 voxelCount:  10 volume:   43.903 midpoint:    0.068  -2.906  -6.661 Surface-void
+Void:   33 voxelCount:   9 volume:   32.655 midpoint:   -0.432  -2.406  -2.161 Surface-void
+Void:   34 voxelCount:   1 volume:    6.762 midpoint:   -1.932   3.594  -9.661  Buried-void
+Void:   35 voxelCount:   8 volume:   32.584 midpoint:    1.068  -2.406 -10.161 Surface-void
+Void:   36 voxelCount:   1 volume:    2.742 midpoint:    0.068  -1.406  -0.661 Surface-void
+Void:   37 voxelCount:   3 volume:   19.490 midpoint:    1.068   0.594   4.339 Surface-void
+Void:   38 voxelCount:  38 volume:  115.201 midpoint:    2.568   3.594  -2.161 Surface-void
+Void:   39 voxelCount:   1 volume:    4.870 midpoint:    0.068   3.594  -7.661  Buried-void
+Void:   40 voxelCount:   2 volume:   16.865 midpoint:    1.568   5.594   1.339 Surface-void
+Void:   41 voxelCount:   1 volume:    3.887 midpoint:    1.068   8.594  -8.661 Surface-void
+Void:   42 voxelCount:   1 volume:    3.168 midpoint:    2.068  -3.406  -4.661 Surface-void
+Void:   43 voxelCount:   1 volume:    5.601 midpoint:    2.068   5.594   3.339 Surface-void
+Void:   44 voxelCount:   1 volume:    2.033 midpoint:    2.068   6.594  -4.661 Surface-void
+Void:   45 voxelCount:   5 volume:   17.319 midpoint:    3.568   6.094   2.339 Surface-void
+Void:   46 voxelCount:   1 volume:    3.344 midpoint:    3.068  -0.406   4.339 Surface-void
+Void:   47 voxelCount:  14 volume:   51.398 midpoint:    5.068   2.094  -7.661 Surface-void
+Void:   48 voxelCount:   2 volume:    7.901 midpoint:    3.068   2.094   4.339 Surface-void
+Void:   49 voxelCount:   1 volume:    8.335 midpoint:    4.068 -10.406 -10.661 Surface-void
+Void:   50 voxelCount:   1 volume:    7.447 midpoint:    4.068  -4.406  -8.661 Surface-void
+Void:   51 voxelCount:   4 volume:   17.682 midpoint:    4.568   0.094   1.339 Surface-void
+Void:   52 voxelCount:   2 volume:   10.660 midpoint:    4.568   0.594  -4.661 Surface-void
+Void:   53 voxelCount:   1 volume:    5.872 midpoint:    4.068   3.594   5.339 Surface-void
+Void:   54 voxelCount:   1 volume:    5.165 midpoint:    5.068  -5.406  -8.661 Surface-void
+Void:   55 voxelCount:   1 volume:    7.965 midpoint:    6.068  -8.406  -7.661 Surface-void
+Void:   56 voxelCount:   1 volume:    3.111 midpoint:    6.068   0.594  -5.661 Surface-void
+Void:   57 voxelCount:   2 volume:    7.552 midpoint:    6.068   3.094  -0.661  Buried-void
+Void:   58 voxelCount:   1 volume:    5.672 midpoint:    6.068   7.594   3.339 Surface-void
+Void:   59 voxelCount:   2 volume:    7.381 midpoint:    7.068  -6.906  -7.661 Surface-void
+Void:   60 voxelCount:   1 volume:    1.973 midpoint:    7.068   1.594  -5.661 Surface-void
+Void:   61 voxelCount:   2 volume:   12.010 midpoint:    7.068   4.094   0.339 Surface-void
+Void:   62 voxelCount:   1 volume:   12.926 midpoint:    7.068   7.594   7.339 Surface-void
+Void:   63 voxelCount:   1 volume:    5.321 midpoint:    8.068  -7.406  -6.661 Surface-void
+Void:   64 voxelCount:   3 volume:   12.944 midpoint:    8.068   7.094   4.839 Surface-void
+Void:   65 voxelCount:   1 volume:    3.476 midpoint:    9.068   1.594  -3.661 Surface-void
+Void:   66 voxelCount:   1 volume:    7.205 midpoint:    9.068   3.594  -0.661 Surface-void
+Void:   67 voxelCount:   1 volume:    6.132 midpoint:   11.068  -6.406 -10.661 Surface-void
+
+Total buried void volume: 47.331000
+Largest buried void volume: 15.669000
+
+Total surface void volume: 966.724000
+Largest surface void volume: 115.201000
+
+Total void volume: 1014.055000
+Largest void volume: 115.201000

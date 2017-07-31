@@ -1,0 +1,3 @@
+rotate -x 45 -y 27 -z 13 /data/pdb/pdb1crn.ent test2.pdb
+
+test1b.vc shows differences in voids between the two rotations

@@ -1,0 +1,51 @@
+ATOM      1  CA  GLY Z   1     -11.610  20.610  11.737  1.00 20.00
+Void:    1 voxelCount:   3 volume:   11.729 midpoint:  -18.532  23.124  15.389 Surface-void
+Void:    2 voxelCount:   2 volume:    5.790 midpoint:  -18.032  22.124  14.389 Surface-void
+Void:    3 voxelCount:  12 volume:   49.593 midpoint:  -14.032  27.124  13.389 Surface-void
+Void:    4 voxelCount:   1 volume:    5.220 midpoint:  -13.032  26.624  16.389 Surface-void
+Void:    5 voxelCount:   1 volume:    8.237 midpoint:  -11.032  21.624   5.389 Surface-void
+Void:    6 voxelCount:   1 volume:    0.169 midpoint:  -11.032  21.624   9.389  Buried-void
+Void:    7 voxelCount:   3 volume:   13.156 midpoint:   -8.532  26.124   3.389 Surface-void
+Void:    8 voxelCount:   1 volume:    7.198 midpoint:   -8.032  24.624   2.389 Surface-void
+Void:    9 voxelCount:   2 volume:   13.423 midpoint:   -7.032  19.624   5.889 Surface-void
+Void:   10 voxelCount:  16 volume:   64.478 midpoint:   -5.032  22.124   8.889 Surface-void
+Void:   11 voxelCount:   1 volume:    6.563 midpoint:   -7.032  25.624   4.389 Surface-void
+Void:   12 voxelCount:   1 volume:    9.397 midpoint:   -7.032  29.624   7.389 Surface-void
+Void:   13 voxelCount:   1 volume:    8.580 midpoint:   -6.032  18.624  12.389 Surface-void
+Void:   14 voxelCount:   2 volume:    7.155 midpoint:   -6.032  23.124  16.389 Surface-void
+Void:   15 voxelCount:   1 volume:    6.148 midpoint:   -6.032  26.624   5.389 Surface-void
+Void:   16 voxelCount:   5 volume:   22.373 midpoint:   -3.532  21.124   1.389 Surface-void
+Void:   17 voxelCount:   5 volume:   18.736 midpoint:   -3.032  25.624  11.389 Surface-void
+Void:   18 voxelCount:   1 volume:    4.312 midpoint:   -3.032  22.624   2.389 Surface-void
+Void:   19 voxelCount:   4 volume:   18.542 midpoint:   -2.532  24.124   6.889  Buried-void
+Void:   20 voxelCount:   8 volume:   35.363 midpoint:   -0.032  18.624   6.889 Surface-void
+Void:   21 voxelCount:   1 volume:    6.914 midpoint:   -2.032  20.624   3.389 Surface-void
+Void:   22 voxelCount:   5 volume:   17.969 midpoint:   -1.032  22.624   3.389 Surface-void
+Void:   23 voxelCount:   1 volume:    5.509 midpoint:   -2.032  23.624  10.389 Surface-void
+Void:   24 voxelCount:   3 volume:   11.284 midpoint:   -1.532  26.124   7.389 Surface-void
+Void:   25 voxelCount:  13 volume:   49.234 midpoint:    1.968  24.624   8.389 Surface-void
+Void:   26 voxelCount:   1 volume:    8.061 midpoint:   -1.032  26.624  14.389 Surface-void
+Void:   27 voxelCount:  54 volume:  146.006 midpoint:    4.968  22.124   3.389 Surface-void
+Void:   28 voxelCount:   1 volume:    2.374 midpoint:    0.968  26.624   7.389 Surface-void
+Void:   29 voxelCount:   1 volume:    6.343 midpoint:    2.968  17.624   0.389 Surface-void
+Void:   30 voxelCount:   1 volume:    7.014 midpoint:    2.968  19.624  13.389 Surface-void
+Void:   31 voxelCount:   2 volume:    8.274 midpoint:    2.968  24.124  10.389 Surface-void
+Void:   32 voxelCount:   1 volume:    5.287 midpoint:    3.968  16.624   1.389 Surface-void
+Void:   33 voxelCount:   1 volume:    3.743 midpoint:    3.968  26.624   3.389  Buried-void
+Void:   34 voxelCount:   4 volume:    7.989 midpoint:    4.468  26.124   5.889 Surface-void
+Void:   35 voxelCount:   1 volume:   11.708 midpoint:    4.968  20.624   9.389  Buried-void
+Void:   36 voxelCount:   2 volume:   14.330 midpoint:    8.468  17.624   1.389  Buried-void
+Void:   37 voxelCount:  11 volume:   40.442 midpoint:    9.468  19.124   4.389 Surface-void
+Void:   38 voxelCount:   2 volume:   10.681 midpoint:    8.968  18.124  -0.611 Surface-void
+Void:   39 voxelCount:   1 volume:    6.248 midpoint:    8.968  20.624  -0.611  Buried-void
+Void:   40 voxelCount:   1 volume:    6.189 midpoint:    9.968  16.624  -1.611 Surface-void
+Void:   41 voxelCount:   1 volume:    7.337 midpoint:   15.968  21.624   0.389 Surface-void
+
+Total buried void volume: 54.740000
+Largest buried void volume: 18.542000
+
+Total surface void volume: 644.358000
+Largest surface void volume: 146.006000
+
+Total void volume: 699.098000
+Largest void volume: 146.006000

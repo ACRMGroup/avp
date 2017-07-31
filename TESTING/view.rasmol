@@ -1,0 +1,13 @@
+#!rasmol -script
+# File: 1crn.rasmol
+# Creator: Inpharmatica iRasMol 1.0
+
+load pdb "protein.both"
+wireframe off
+select *:Z
+spacefill 25
+select *:Z.o
+spacefill 50
+colour green
+select *:a
+cartoon on

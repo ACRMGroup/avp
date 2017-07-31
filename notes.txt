@@ -1,0 +1,6 @@
+Modify the code that finds whether a point is near to an atom
+to have a probe size (different from the grid spacing).
+
+When checking solvent positions use a bigger probe size IF there
+is only one neighbouring solvent point.
+

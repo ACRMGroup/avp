@@ -1,0 +1,287 @@
+How the domain splitting works at present...
+--------------------------------------------
+
+It is driven by the Perl script makedomains.pl which lives
+in ~andrew/cath/utils/
+
+This script reads a CATH domains file (the bulk of the code...)
+and then makes calls to my getpdb C program which takes a
+PDB file and a residue range and spits out just this section of
+the protein ATOM records. See the section of the script commented
+with "# Append the segment to an output file"
+
+There is a kind of weird bit in there called DeleteIfObsolete()
+which deletes junk output files if the input file didn't exist
+(i.e. the PDB file had been obsoleted and didn't exist in the
+PDB any more). It would be much more sensible just to check
+whether the input PDB file exists before bothering to do any
+processing...
+
+Remember that the domain file contains *only* PDB files with multiple
+domains in a chain. If the domain ID has a zero in the domain number
+field then that chain has only a single domain and it will not be
+listed in the domains file.
+
+
+
+To get the split domains with hetatms, do as follows...
+-------------------------------------------------------
+
+First of all you need to modify the makedomains.pl script
+such that when you have build the complete domain PDB file, there
+is an additional call to your new C program that will add the
+HETATMS. I suggest this program is called as follows:
+
+addhet complete.pdb domain.pdb domhet.pdb
+
+I think the filenames are fairly self-explanatory!
+
+So you need to call this program using the domain.pdb that you
+have built with the previous calls to the getpdb program,
+create domhet.pdb in /tmp and then replace domain.pdb with
+the domhet.pdb from /tmp
+
+That was all easy enough :-) Now you need to write addhet.c
+
+So the method is as follows:
+
+1. Read the domain.pdb file
+2. Determine the bounding box of the protein (i.e. minimum and
+   maximum x,y,z coordinates)
+3. Write the contents of domain.pdb out to domhet.pdb
+4. Read the HETATM records from the complete.pdb file
+5. Run through these HETATMs, one residue at a time
+6. If any atom of a residue is within the protein bounding box,
+   write the whole HETATM residue out to domhet.pdb
+
+OK, so the method is dead-easy... Implementation is a tad more
+difficult :-) I'll describe each section in detail
+
+0. Initialisation
+-----------------
+To start you need to check the requisite number of files have been
+specified on the command line and grab their names. You then need
+to open the two input files for reading and the output file for
+writing (fairly obvious!).
+
+Before any of that you need to #include the following:
+#include "bioplib/macros.h"
+#include "bioplib/pdb.h"
+(as well as any of the usual stuff you need like stdio.h, etc)
+
+1. Read the domain.pdb file
+---------------------------
+This is actually dead easy, just define a pointer of type PDB
+and call ReadPDB()
+
+PDB *pdb;
+int natoms;
+pdb = ReadPDB(fp, &natoms);
+
+where fp is the file pointer for the file you want to read and
+natoms will contain the number of atoms read (should you care!)
+
+pdb is now a linked list of structures of type PDB.
+
+2. Determine the bounding box
+-----------------------------
+Simply have 6 variables (xmin, xmax, ymin, etc...) and set the
+min and max for x, y and z to the x,y,z coordinates of the first
+atom. i.e.
+
+xmin = xmax = pdb->x;
+etc...
+
+Then walk the linked list. If a coordinate is less than the
+corresponding minimum, update the minimum and if greater than
+the corresponding maximum, update the maximum. To walk the
+linked list, you just do:
+
+PDB *p;
+for(p=pdb; p!=NULL; p=p->next)
+{
+   ...update min and max, looking at p->x etc...
+}
+
+The macros.h file you have included actually has a macro called
+NEXT(), so you can do:
+
+for(p=pdb; p!=NULL; NEXT(p))
+
+
+3. Write the contents of domain.pdb out to domhet.pdb
+-----------------------------------------------------
+Trivial:
+
+WritePDB(fp, pdb);
+
+(where fp is your output file pointer and pdb your linked list).
+
+
+4. Read the HETATM records from the complete.pdb file
+-----------------------------------------------------
+Unfortunately I don't have a routine just to read HETATM records from
+a PDB file. However here is something that will do the trick. I've
+commented very heavily so you can see what is going on.
+
+PDB *ReadPDBHetAtoms(FILE *fp, int *natoms)
+{
+   PDB *pdb = NULL,
+       *pdb2 = NULL,
+       *p, *q;
+   int natoms;
+
+   /* Read the full PDB file */
+   if((pdb = ReadPDB(fp, &natoms))!=NULL)
+   {
+      /* Work through the linked list an atom at a time */
+      for(p=pdb; p!=NULL; NEXT(p))
+      {
+         /* If it's of type HETATM */
+         if(!strncmp(p->junk, "HETATM", 6))
+         {
+            /* If we haven't got an output linked list, start one */
+            if(pdb2==NULL)
+            {
+               /* INIT is a macro in my macros.h file that mallocs a
+                  structure of the specified type and sets the ->next
+                  pointer to NULL
+               */
+               INIT(pdb2, PDB);
+               q = pdb2;
+            }
+            else
+            {
+               /* We've already started a linked list for output, so
+                  allocate another item. Again a macro of mine that
+                  takes a pointer, allocates another structure and sets
+                  q->next to that structure then does q=q->next
+               */
+               ALLOCNEXT(q, PDB);
+            }
+            /* If allocation failed, free the lists we've created thus
+               far and return NULL. Again FREELIST() is a macro in
+               macros.h which works along a linked list and frees all items
+
+            */
+            if(q==NULL)
+            {
+               FREELIST(pdb, PDB);
+               FREELIST(pdb2, PDB);
+               return(NULL);
+            }
+            /* This just does *q=*p then sets the ->next pointer to
+               NULL. Use this instead of actually doing it here in
+               case I implement something with a doubly linked list in
+               future
+            */
+            CopyPDB(q, p)
+         }
+      }
+
+      /* Free the list of all atoms and return our list of HETATMs */
+      FREELIST(pdb, PDB);
+      return(pdb2);
+   }
+   return(NULL);
+}
+
+
+5. Run through these HETATMs, one residue at a time
+---------------------------------------------------
+Now it starts to get a tiny bit trickier, but fear not, bioplib
+has routines to do this :-)
+
+We need to define the start and stop of each HET residue. For
+waters and metals (usually), this will of course be one atom,
+but for heme groups, etc., it won't.
+
+All you need is the following:
+
+PDB *start, *stop;
+
+for(start=pdb; start!=NULL; start=stop)
+{
+   stop = FindNextResidue(start);
+
+   ... do your stuff for each residue ...
+}
+
+
+6. If any atom of a residue is within the protein bounding box,
+   write the whole HETATM residue out to domhet.pdb
+---------------------------------------------------------------
+The real meat of it... All this occurs in the 'do your stuff'
+section of stage 5.
+
+So what you did in stage 5 gives you the variables start and
+stop that let you walk through the linked list for this residue.
+
+Set a flag (isNeighbour, or some such) to FALSE 
+
+My macros.h file defines the type BOOL and values TRUE and FALSE
+
+Walk the list as before:
+for(p=start; p!=stop; NEXT(p))
+{
+}
+
+Test the x, y, z coordinates of each atom so see if they are in
+the bounding box you defined earlier.
+
+If so, set the isNeighbour flag to TRUE and break out of this
+for() loop.
+
+After the for() loop, see if isNeighbour is set. If so, then
+write each atom of the residue to the output file:
+
+for(p=start; p!=stop; NEXT(p))
+{
+   WritePDBRecord(fp, p);
+}
+
+(Note WritePDBRecord() writes a single atom whereas WritePDB()
+writes the whole linked list.)
+
+
+7. Compiling it!
+----------------
+To compile you need to tell the compiler where to find my .h files,
+where to find my library files and which libraries to link with.
+
+The complete command line is therefore:
+
+cc -I/home/andrew/include -L/home/andrew/lib -o addhet addhet.c -lbiop -lgen -lm
+
+-I     specifies where the include files live
+-L     specifies where the library files live
+-lbiop says to link with libbiop.a
+-lgen  says to link with libgen.a
+-lm    says to link with the system maths library (not sure you 
+       will need that)
+
+You should also include the options
+-Wall      switch on all warnings
+-ansi      warn about non-ANSI compliant C
+-pedantic  be extra fussy!
+
+All code should compile with NO WARNINGS with that lot on :-) (The only
+exception that I make to that rule is to use the pipe() system call
+very occasionally which is non-ANSI. This is used to run an external
+program - e.g. gunzip for uncompressing gzipped PDB files as you
+read them.)
+
+Note that the linker is pretty dumb and the order in which you
+specify the library files is important - you must only have forward 
+references. i.e. the .c file can reference stuff in biop and gen and m;
+biop can reference stuff in gen and m; gen can only reference stuff 
+in m
+
+I actually alias cc as follows:
+
+alias cc='cc -I/home/andrew/include -L/home/andrew/lib -Wall -ansi -pedantic'
+
+8. Go home and celebrate
+------------------------
+All pretty easy really!!!!!!
+

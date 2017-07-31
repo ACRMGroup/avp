@@ -1,0 +1,13 @@
+Void:    1 voxelCount:   2 volume:    9.661 midpoint:  -16.102  -2.672   3.593 Surface-void
+Void:    2 voxelCount:   1 volume:    9.666 midpoint:   13.898   0.828  -3.407 Surface-void
+Void:    3 voxelCount:   6 volume:   15.204 midpoint:   14.398   4.328  -2.407 Surface-void
+Void:    4 voxelCount:   1 volume:    1.846 midpoint:   14.898   2.828  -4.407 Surface-void
+
+Total buried void volume: 0.000000
+Largest buried void volume: 0.000000
+
+Total surface void volume: 36.377000
+Largest surface void volume: 15.204000
+
+Total void volume: 36.377000
+Largest void volume: 15.204000

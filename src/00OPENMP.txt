@@ -1,0 +1,8 @@
+GCC V4.3.2 and above supports OpenMP.
+
+Compile with
+   cc -fopenmp
+and link with
+   -lgomp
+
+

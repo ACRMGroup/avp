@@ -1,0 +1,52 @@
+http://gibk26.bse.kyutech.ac.jp/jouhou/Protherm/protherm_search.html
+
+Search terms:
+        Tm from 1 to 200 C
+Display options:
+        Protein, PDB_wild, PDB_mutant, Tm
+Hit list from 1 to 30000
+
+Results in ProThermSearch.txt (done by cut and paste!)
+
+./findvalues.pl ProThermSearch.txt | sort > pdb_tm.sort
+..extracts the PDB code (mutant if there is one) and the Tm
+
+./avtm.pl pdb_tm.sort > pdb_tm.mean
+..averages the Tm for each PDB code
+
+nohup nice -10 ./avp_protherm.pl pdb_tm.mean &> avp.out &
+..Runs AVP on each PDB file to get the largest and total voids
+
+./read_tmlist.pl pdb_tm.mean > avp_tm.out
+..Calls void_tm_printout for each file and extracts the tm and
+..void sizes - i.e. final results.
+
+awk '{print $5/$3, $2}' pdb_tm.out | xgraph -P -nl
+awk '{print $5/$3, $2}' pdb_tm.out | correlation
+..show Tm vs total void volume per residue
+
+awk '{if($4 <= 3) print $5/$3, $2}' pdb_tm.out | xgraph -P -nl
+..same but high resolution structures only
+
+awk '{print $6, $2}' pdb_tm.out | xgraph -P -nl
+awk '{print $6, $2}' pdb_tm.out | correlation
+..show Tm vs largest void volume
+
+awk '{if($4 <= 3) print $6, $2}' pdb_tm.out | xgraph -P -nl
+..same but high resolution structures only
+
+awk '{if($3 <= 200) print $6, $2}' pdb_tm.out | xgraph -P -nl
+awk '{if($3 <= 200)) print $5/$3, $2}' pdb_tm.out | xgraph -P -nl
+(resolution makes no difference)
+
+
+awk '{if(($3 <= 200)) print $5/$3, $2}' pdb_tm.out >tm_totvoidperres.amplot
+awk '{if(($3 <= 200)) print $5/$3, $2}' pdb_tm.out | correlation
+Correlation coefficient (Pearson's r) = -0.067815
+
+awk '{if($3 <= 200) print $6, $2}' pdb_tm.out > tm_largestvoid.amplot
+awk '{if($3 <= 200) print $6, $2}' pdb_tm.out | correlation
+Correlation coefficient (Pearson's r) = -0.246582
+
+
+

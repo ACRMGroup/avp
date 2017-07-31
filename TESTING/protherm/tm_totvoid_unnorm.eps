@@ -1,0 +1,1353 @@
+%!PS-Adobe-2.0
+%%Creator: AMPlot2. SciTech Software, 1992
+%%For: (Amiga)
+%%Title: ()
+%%CreationDate: Mon Sep 13 12:01:01 2004
+%%Pages: 1
+%%BoundingBox:  138   500   523   753
+%%DocumentFonts: atend
+%%EndComments
+%%---------------Prologue-----------------
+/xpicsize  4.6250 def
+/ypicsize  3.0000 def
+/xoffset  2.5000 def
+/yoffset  7.4000 def
+/xscale { xpicsize 72 mul mul } def
+/yscale { ypicsize 72 mul mul } def
+/xunits { xscale xoffset 72 mul add } def
+/yunits { yscale yoffset 72 mul add } def
+
+% Simple font command compatible with Amiga re-encoding version
+/font {
+        pop
+        findfont exch
+        scalefont
+        setfont
+}def
+
+/hatchSpace 2.000 def
+/hatchThick 0.500 def
+/rightJustifyText
+{  /RightColumn exch def
+   dup
+   stringwidth pop
+   RightColumn exch sub
+   Line moveto
+   show
+}  def
+/circle
+{  0 360 arc
+}  def
+/raise
+{  TextHeight 1.5 div FontName FontName1 font
+   0 TextHeight 2 div     rmoveto
+   show
+   0 TextHeight 2 div neg rmoveto
+   TextHeight FontName FontName1 font
+}  def
+/lower
+{  TextHeight 1.5 div FontName FontName1 font
+   0 TextHeight 4 div neg rmoveto
+   show
+   0 TextHeight 4 div     rmoveto
+   TextHeight FontName FontName1 font
+}  def
+/greek
+{  AltFontName findfont TextHeight scalefont setfont
+   show
+   TextHeight FontName FontName1 font
+}  def
+/AltFontName  /Symbol def
+/max
+{  2 copy
+   lt {exch} if
+   pop
+}  def
+/horizLines
+% x1 y1 x2 y2 horizLines
+{  newpath
+   hatchThick setlinewidth
+   /y2 exch def
+   /x2 exch def
+   /y1 exch def
+   /x1 exch def
+   y1 yunits hatchSpace y2 yunits
+   {  dup
+      x1 xunits exch moveto
+      x2 xunits exch lineto
+   }  for
+   stroke
+}  def
+/vertLines
+% x1 y1 x2 y2 vertLines
+{  newpath
+   hatchThick setlinewidth
+   /y2 exch def
+   /x2 exch def
+   /y1 exch def
+   /x1 exch def
+   x1 xunits hatchSpace x2 xunits
+   {  dup
+      y1 yunits moveto
+      y2 yunits lineto
+   }  for
+   stroke
+}  def
+/upLines
+% x1 y1 x2 y2 upLines
+{  newpath
+   hatchThick setlinewidth
+   /y2 exch def
+   /x2 exch def
+   /y1 exch def
+   /x1 exch def
+   x1 xunits hatchSpace x2 xunits
+   {  y1 yunits moveto
+      x2 xunits x1 xunits sub dup rlineto
+   }  for
+   stroke
+   y1 yunits hatchSpace y2 yunits
+   {  x1 xunits exch moveto
+      x2 xunits x1 xunits sub dup rlineto
+   }  for
+   stroke
+}  def
+/downLines
+% x1 y1 x2 y2 downLines
+{  newpath
+   hatchThick setlinewidth
+   /y2 exch def
+   /x2 exch def
+   /y1 exch def
+   /x1 exch def
+   x1 xunits hatchSpace x2 xunits
+   {  y2 yunits moveto
+      x2 xunits x1 xunits sub dup neg rlineto
+   }  for
+   stroke
+   y2 yunits hatchSpace neg y1 yunits
+   {  x1 xunits exch moveto
+      x2 xunits x1 xunits sub dup neg rlineto
+   }  for
+   stroke
+}  def
+%%EndProlog
+%%Page 1 1
+%%---------------Script-----------------
+[] 0 setdash
+1.000000 setlinewidth
+2 setlinecap
+ 0.0000 xunits  1.0000 yunits moveto
+ 0.0000 xunits  0.0000 yunits lineto
+ 0.0000 xunits  0.0000 yunits moveto
+ 1.0000 xunits  0.0000 yunits lineto
+stroke
+0 setlinecap
+/FontName /Times-Roman def
+/FontName1 /Times-Roman1 def
+/TextHeight 10.000000 def
+TextHeight FontName FontName1 font
+ 0.0000 xunits  0.0000 yunits moveto
+ 0.0000 -5.0000 rlineto
+stroke
+(0)
+TextHeight  0.0000 yunits exch sub /Line exch def
+dup stringwidth pop 2 div
+ 0.0000 xunits exch sub
+Line -5.0000 add moveto pop
+(0) show 
+ 0.2500 xunits  0.0000 yunits moveto
+ 0.0000 -5.0000 rlineto
+stroke
+(1000)
+TextHeight  0.0000 yunits exch sub /Line exch def
+dup stringwidth pop 2 div
+ 0.2500 xunits exch sub
+Line -5.0000 add moveto pop
+(1000) show 
+ 0.5000 xunits  0.0000 yunits moveto
+ 0.0000 -5.0000 rlineto
+stroke
+(2000)
+TextHeight  0.0000 yunits exch sub /Line exch def
+dup stringwidth pop 2 div
+ 0.5000 xunits exch sub
+Line -5.0000 add moveto pop
+(2000) show 
+ 0.7500 xunits  0.0000 yunits moveto
+ 0.0000 -5.0000 rlineto
+stroke
+(3000)
+TextHeight  0.0000 yunits exch sub /Line exch def
+dup stringwidth pop 2 div
+ 0.7500 xunits exch sub
+Line -5.0000 add moveto pop
+(3000) show 
+ 1.0000 xunits  0.0000 yunits moveto
+ 0.0000 -5.0000 rlineto
+stroke
+(4000)
+TextHeight  0.0000 yunits exch sub /Line exch def
+dup stringwidth pop 2 div
+ 1.0000 xunits exch sub
+Line -5.0000 add moveto pop
+(4000) show 
+/FontName /Times-Roman def
+/FontName1 /Times-Roman1 def
+/TextHeight 10.000000 def
+TextHeight FontName FontName1 font
+ 0.0000 xunits  0.0000 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.0000 yunits TextHeight 2 div sub 2 add def
+(20)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.1111 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.1111 yunits TextHeight 2 div sub 2 add def
+(30)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.2222 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.2222 yunits TextHeight 2 div sub 2 add def
+(40)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.3333 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.3333 yunits TextHeight 2 div sub 2 add def
+(50)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.4444 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.4444 yunits TextHeight 2 div sub 2 add def
+(60)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.5556 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.5556 yunits TextHeight 2 div sub 2 add def
+(70)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.6667 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.6667 yunits TextHeight 2 div sub 2 add def
+(80)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.7778 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.7778 yunits TextHeight 2 div sub 2 add def
+(90)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  0.8889 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  0.8889 yunits TextHeight 2 div sub 2 add def
+(100)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+ 0.0000 xunits  1.0000 yunits moveto
+-5.0000  0.0000 rlineto
+stroke
+/Line  1.0000 yunits TextHeight 2 div sub 2 add def
+(110)
+ 0.0000 xunits 4 sub -5.000000 add rightJustifyText
+/FontName /Helvetica def
+/FontName1 /Helvetica1 def
+/TextHeight 14.000000 def
+TextHeight FontName FontName1 font
+(Total Void Volume)
+TextHeight -0.0612 yunits exch sub /Line exch def
+dup stringwidth pop 2 div
+ 0.5000 xunits exch sub
+Line -5.0000 add moveto pop
+(Total Void Volume) show 
+/FontName /Helvetica def
+/FontName1 /Helvetica1 def
+/TextHeight 14.000000 def
+TextHeight FontName FontName1 font
+(Tm (oC)) dup
+stringwidth pop 2 div
+    0.5 yunits exch sub
+/FontName /Times-Roman def
+/FontName1 /Times-Roman1 def
+/TextHeight 10.000000 def
+TextHeight FontName FontName1 font
+      0 xunits (110  ) stringwidth pop sub 5 sub -5.000000 add exch moveto
+/FontName /Helvetica def
+/FontName1 /Helvetica1 def
+/TextHeight 14.000000 def
+TextHeight FontName FontName1 font
+pop 90 rotate (T) show (m) lower ( \() show (o) raise (C\)) show 
+ -90 rotate
+[] 0 setdash
+1.000000 setlinewidth
+newpath 0.7137 xunits  0.3348 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7510 xunits  0.3621 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7206 xunits  0.3583 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6677 xunits  0.3641 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7380 xunits  0.3476 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7333 xunits  0.2373 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7949 xunits  0.3596 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6977 xunits  0.3523 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6958 xunits  0.3552 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7254 xunits  0.3184 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7980 xunits  0.3457 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.8326 xunits  0.3309 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7347 xunits  0.3364 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7391 xunits  0.3396 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7056 xunits  0.2676 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6971 xunits  0.2386 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7512 xunits  0.3094 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7963 xunits  0.4011 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7336 xunits  0.4868 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7394 xunits  0.5010 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7273 xunits  0.5055 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5209 xunits  0.3809 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7127 xunits  0.3452 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6816 xunits  0.3571 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7205 xunits  0.3438 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7076 xunits  0.3446 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6884 xunits  0.3458 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6926 xunits  0.3921 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5822 xunits  0.2811 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5027 xunits  0.4187 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5666 xunits  0.3769 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6132 xunits  0.4028 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7447 xunits  0.4678 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6867 xunits  0.4456 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1670 xunits  0.4475 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4162 xunits  0.4611 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3483 xunits  0.5778 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5686 xunits  0.5138 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3043 xunits  0.3827 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2535 xunits  0.3616 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6513 xunits  0.6644 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.0313 xunits  0.4852 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2371 xunits  0.6422 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6383 xunits  0.3544 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.0693 xunits  0.3511 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1932 xunits  0.5035 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1319 xunits  0.3778 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2224 xunits  0.4319 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1017 xunits  0.6444 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.8888 xunits  0.6475 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6346 xunits  0.5585 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.8586 xunits  0.0556 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5114 xunits  0.5289 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1892 xunits  0.5631 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1733 xunits  0.5044 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1595 xunits  0.4144 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6428 xunits  0.3622 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3756 xunits  0.5213 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4551 xunits  0.2593 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2381 xunits  0.6333 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7006 xunits  0.3700 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6943 xunits  0.3476 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6859 xunits  0.3721 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6961 xunits  0.3701 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6753 xunits  0.3662 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6686 xunits  0.3711 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6635 xunits  0.3733 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4213 xunits  0.3908 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1050 xunits  0.4668 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1380 xunits  0.3222 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5363 xunits  0.1667 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1748 xunits  0.5048 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7644 xunits  0.3476 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6992 xunits  0.4785 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6884 xunits  0.5206 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6940 xunits  0.5190 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6660 xunits  0.5037 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6738 xunits  0.5341 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6919 xunits  0.5409 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6542 xunits  0.5335 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7027 xunits  0.5508 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6909 xunits  0.5522 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6325 xunits  0.5608 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6348 xunits  0.5662 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6953 xunits  0.5311 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6268 xunits  0.5307 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6618 xunits  0.5255 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7443 xunits  0.5043 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6985 xunits  0.5450 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6767 xunits  0.4978 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7289 xunits  0.4738 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6038 xunits  0.5287 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6757 xunits  0.5400 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6674 xunits  0.5219 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7612 xunits  0.5128 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6664 xunits  0.5393 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5696 xunits  0.5406 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6588 xunits  0.5472 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7252 xunits  0.5302 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6263 xunits  0.2989 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2809 xunits  0.4022 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5182 xunits  0.6289 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5387 xunits  0.6000 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5390 xunits  0.5733 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5303 xunits  0.5911 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5727 xunits  0.6178 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5617 xunits  0.5922 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5347 xunits  0.2194 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6699 xunits  0.5624 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3845 xunits  0.2756 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.9419 xunits  0.5889 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5188 xunits  0.3822 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2161 xunits  0.3722 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5077 xunits  0.3900 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6673 xunits  0.4025 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6425 xunits  0.3681 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6700 xunits  0.3511 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6707 xunits  0.2644 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6862 xunits  0.1900 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6770 xunits  0.1978 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6934 xunits  0.2633 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6822 xunits  0.1422 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6750 xunits  0.1978 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6617 xunits  0.1567 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6378 xunits  0.2995 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6717 xunits  0.2656 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6737 xunits  0.2747 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6797 xunits  0.2653 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6718 xunits  0.2167 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6620 xunits  0.2628 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6620 xunits  0.3037 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6773 xunits  0.3517 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6549 xunits  0.2844 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6768 xunits  0.4165 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7033 xunits  0.3799 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7099 xunits  0.3517 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6643 xunits  0.3689 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6878 xunits  0.3672 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6785 xunits  0.3658 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6923 xunits  0.2256 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6666 xunits  0.2333 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6703 xunits  0.4074 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6644 xunits  0.3444 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6566 xunits  0.3444 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6715 xunits  0.2222 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6457 xunits  0.3889 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6707 xunits  0.2333 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6591 xunits  0.3370 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6634 xunits  0.2030 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6869 xunits  0.2683 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6493 xunits  0.3802 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6578 xunits  0.4226 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7030 xunits  0.4100 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6492 xunits  0.3511 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6937 xunits  0.4289 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6637 xunits  0.4272 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6607 xunits  0.4144 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6859 xunits  0.4233 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6879 xunits  0.4200 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6735 xunits  0.2106 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6802 xunits  0.2244 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6657 xunits  0.2444 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6716 xunits  0.2456 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6625 xunits  0.3056 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6616 xunits  0.3222 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6499 xunits  0.1459 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7051 xunits  0.3217 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7106 xunits  0.3711 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6867 xunits  0.4183 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6915 xunits  0.1878 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7311 xunits  0.3450 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6978 xunits  0.3249 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7008 xunits  0.3417 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7038 xunits  0.3478 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7055 xunits  0.3250 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7555 xunits  0.3905 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6894 xunits  0.4071 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7091 xunits  0.3366 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7129 xunits  0.3801 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6788 xunits  0.1481 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6528 xunits  0.2561 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6814 xunits  0.2472 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6624 xunits  0.2406 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6802 xunits  0.2750 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6851 xunits  0.1161 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6709 xunits  0.1261 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7619 xunits  0.2478 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6398 xunits  0.3989 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6624 xunits  0.3059 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6861 xunits  0.4147 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6905 xunits  0.4633 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6598 xunits  0.4309 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7326 xunits  0.0663 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7511 xunits  0.2752 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7452 xunits  0.4158 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7161 xunits  0.3830 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7158 xunits  0.4063 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7395 xunits  0.3602 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7067 xunits  0.3669 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6944 xunits  0.3511 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6242 xunits  0.3178 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6177 xunits  0.3867 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6003 xunits  0.3683 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4671 xunits  0.5556 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4926 xunits  0.4900 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5297 xunits  0.5411 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4863 xunits  0.5300 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4890 xunits  0.5456 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4741 xunits  0.4100 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4050 xunits  0.3963 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3710 xunits  0.2889 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.0010 xunits  0.3329 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5599 xunits  0.5956 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7051 xunits  0.2778 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7232 xunits  0.3389 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7030 xunits  0.3283 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7343 xunits  0.2922 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6508 xunits  0.3211 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7053 xunits  0.2772 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3734 xunits  0.4873 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1524 xunits  0.3862 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2783 xunits  0.5256 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1608 xunits  0.3889 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3626 xunits  0.6517 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2752 xunits  0.1111 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5317 xunits  0.3531 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5756 xunits  0.3850 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5483 xunits  0.3142 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5431 xunits  0.4544 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6097 xunits  0.4700 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5232 xunits  0.3080 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5732 xunits  0.3572 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5675 xunits  0.3320 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5741 xunits  0.3341 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4768 xunits  0.6111 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1142 xunits  0.3753 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3229 xunits  0.4956 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6775 xunits  0.2100 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6824 xunits  0.2361 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6896 xunits  0.2728 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6919 xunits  0.5022 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6924 xunits  0.4944 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6576 xunits  0.2456 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5982 xunits  0.2744 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5574 xunits  0.2589 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4153 xunits  0.3828 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6957 xunits  0.4680 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5978 xunits  0.3898 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6019 xunits  0.3439 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6423 xunits  0.3433 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6378 xunits  0.3433 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6161 xunits  0.3433 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6134 xunits  0.3400 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6036 xunits  0.3211 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5967 xunits  0.3406 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4531 xunits  0.7333 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.0783 xunits  0.5856 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4252 xunits  0.3794 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2143 xunits  0.3319 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6247 xunits  0.2931 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6899 xunits  0.2878 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4926 xunits  0.6511 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2676 xunits  0.5442 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7341 xunits  0.1111 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6040 xunits  0.3188 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5003 xunits  0.3956 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5196 xunits  0.3467 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4667 xunits  0.4911 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2902 xunits  0.4729 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5057 xunits  0.9133 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6643 xunits  0.4914 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4495 xunits  0.9000 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1880 xunits  0.4607 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3109 xunits  0.4714 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1496 xunits  0.5661 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6141 xunits  0.4927 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5531 xunits  0.4822 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6088 xunits  0.5307 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5403 xunits  0.5133 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5575 xunits  0.4971 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5165 xunits  0.5253 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1672 xunits  0.7811 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3968 xunits  0.3402 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3934 xunits  0.3535 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3996 xunits  0.3481 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3761 xunits  0.3444 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3804 xunits  0.4833 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3887 xunits  0.3280 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3098 xunits  0.4113 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6866 xunits  0.5389 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.0091 xunits  0.3276 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7066 xunits  0.3428 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7465 xunits  0.2673 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7771 xunits  0.3520 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7011 xunits  0.3336 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7345 xunits  0.3448 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6972 xunits  0.2444 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6576 xunits  0.2344 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6212 xunits  0.2989 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7082 xunits  0.3711 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7245 xunits  0.3111 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7212 xunits  0.2978 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7518 xunits  0.2300 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7152 xunits  0.2789 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6901 xunits  0.2589 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7476 xunits  0.2400 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7437 xunits  0.2611 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7506 xunits  0.2878 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7856 xunits  0.2367 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7144 xunits  0.2333 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7679 xunits  0.2889 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7092 xunits  0.2033 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6377 xunits  0.4922 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7445 xunits  0.5189 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7453 xunits  0.5356 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4574 xunits  0.3583 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5211 xunits  0.2722 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5440 xunits  0.3067 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4938 xunits  0.2544 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5410 xunits  0.2756 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5040 xunits  0.2944 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5791 xunits  0.2956 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5247 xunits  0.3278 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5189 xunits  0.2211 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5195 xunits  0.2746 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5443 xunits  0.2926 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5392 xunits  0.3033 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4716 xunits  0.2756 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5040 xunits  0.2756 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4610 xunits  0.4769 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1704 xunits  0.3229 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1857 xunits  0.3446 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3696 xunits  0.3722 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6151 xunits  0.3556 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6022 xunits  0.3903 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5302 xunits  0.4893 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5468 xunits  0.4344 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5631 xunits  0.3853 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5287 xunits  0.4611 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5705 xunits  0.3873 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.5354 xunits  0.4216 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3704 xunits  0.5961 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6639 xunits  0.3985 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.6682 xunits  0.3362 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7273 xunits  0.8185 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7295 xunits  0.2660 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2739 xunits  0.4802 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3251 xunits  0.5407 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.2675 xunits  0.4854 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.7404 xunits  0.5594 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.4725 xunits  0.4920 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1516 xunits  0.5667 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.3438 xunits  0.4000 yunits  2.0000 circle
+0 setgray
+fill
+newpath 0.1355 xunits  0.5444 yunits  2.0000 circle
+0 setgray
+fill
+1.000000 setlinewidth
+showpage
+%%Trailer

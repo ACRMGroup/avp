@@ -1,0 +1,10 @@
+#!rasmol -script
+# File: 1crn.rasmol
+# Creator: Inpharmatica iRasMol 1.0
+
+load pdb "1tsr.fvoids2"
+wireframe off
+select *:Z
+spacefill 5
+select *:Z.o
+spacefill 10

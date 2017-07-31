@@ -1,0 +1,7 @@
+avp -R -p 0.5 /data/pdb/pdb1crn.ent >1crn.test
+echo " "
+echo "********************************************************"
+echo " "
+echo "Differences from reference regression run:"
+echo " "
+diff 1crn.test 1crn.regress

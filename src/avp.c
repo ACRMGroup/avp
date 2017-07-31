@@ -165,6 +165,7 @@
                                      grid point                         */
 #define RADEXPAND 2               /* Atom radius expansion to find 
                                      neighbous                          */
+#define WATER_RADIUS 1.4          /* Radius of a standard water         */
 
 #define TYPE_VOID     (0)         /* Grid point types                   */
 #define TYPE_PROTEIN  (1)
@@ -181,6 +182,14 @@
                                      this factor of solvent size        */
 #define GRID_EXPAND 2             /* Factor by which to expand grid     */
 
+/* Test if an atom is a water                                           */
+#define ISWATER(x)  (!strncmp((x)->resnam,"HOH",3) ||                   \
+                     !strncmp((x)->resnam,"OH2",3) ||                   \
+                     !strncmp((x)->resnam,"OHH",3) ||                   \
+                     !strncmp((x)->resnam,"DOD",3) ||                   \
+                     !strncmp((x)->resnam,"OD2",3) ||                   \
+                     !strncmp((x)->resnam,"ODD",3) ||                   \
+                     !strncmp((x)->resnam,"WAT",3))
 
 /************************************************************************/
 typedef struct _pointlist
@@ -234,6 +243,7 @@ typedef struct
    BOOL printSolvent;
    BOOL printAtoms;
    BOOL printRefinedVoids;
+   BOOL printWaterNeighbours;
    BOOL edgeConnected;
    BOOL cornerConnected;
    BOOL printNeighbours;
@@ -247,15 +257,18 @@ typedef struct
 */
 FLAGS gFlags;
 
-int gDepth = 0,
-    gMaxDepth = 0;
+int  gDepth = 0,
+     gMaxDepth = 0;
+REAL gOffsetX = 0.0,
+     gOffsetY = 0.0,
+     gOffsetZ = 0.0;
 
 /************************************************************************/
 /* Prototypes
 */
 int main(int argc, char **argv);
-VOIDS *FindVoids(PDB *pdb, REAL gridStep, REAL solvSize, REAL probeSize,
-                 BOOL doRefine);
+VOIDS *FindVoids(FILE *out, PDB *pdb, REAL gridStep, REAL solvSize, 
+                 REAL probeSize, BOOL doRefine);
 void FindBoundaries(PDB *pdb, GRID *grid);
 void UpdateBoundaries(GRID *grid, REAL expandSize);
 BOOL BuildGrid(GRID *grid, REAL gridStep);
@@ -299,6 +312,7 @@ int RefineVoxelNeighbours(GRID *grid, PDB *pdb, POINTLIST *pt,
 int RefineAVoxelNeighbour(GRID *grid, PDB *pdb, POINTLIST *pt,  
                           int xoff, int yoff, int zoff, 
                           REAL fineGridStep, REAL probeSize);
+void PrintWaterNeighbours(FILE *out, PDB *pdb, GRID *grid);
 
 
 /************************************************************************/
@@ -337,7 +351,7 @@ int main(int argc, char **argv)
          if((pdb=ReadPDB(in, &natoms)))
          {
             SetRadii(pdb);
-            voidlist = FindVoids(pdb, gridStep, solvSize, probeSize,
+            voidlist = FindVoids(out, pdb, gridStep, solvSize, probeSize,
                                  doRefine);
             if(!gFlags.quiet)
             {
@@ -363,9 +377,9 @@ int main(int argc, char **argv)
 
 
 /************************************************************************/
-/*>VOIDS *FindVoids(PDB *pdb, REAL gridStep, REAL solvSize, 
+/*>VOIDS *FindVoids(FILE *out, PDB *pdb, REAL gridStep, REAL solvSize, 
                     REAL probeSize, BOOL doRefine)
-   --------------------------------------------------------
+   -------------------------------------------------------------------
    Input:     
    Output:    
    Returns:   
@@ -375,9 +389,10 @@ int main(int argc, char **argv)
    points into voids.
 
    17.10.01 Original   By: ACRM
+   06.02.02 Added output file parameter and call to PrintWaterNeighbours()
 */
-VOIDS *FindVoids(PDB *pdb, REAL gridStep, REAL solvSize, REAL probeSize,
-                 BOOL doRefine)
+VOIDS *FindVoids(FILE *out, PDB *pdb, REAL gridStep, REAL solvSize, 
+                 REAL probeSize, BOOL doRefine)
 {
    VOIDS *voids;
    GRID  grid;
@@ -417,6 +432,11 @@ VOIDS *FindVoids(PDB *pdb, REAL gridStep, REAL solvSize, REAL probeSize,
          fprintf(stderr,"Printing grid\n");
       }
       PrintGrid(gFlags.gridFile, &grid, FALSE);
+   }
+
+   if(gFlags.printWaterNeighbours)
+   {
+      PrintWaterNeighbours(out, pdb, &grid);
    }
 
    if(!gFlags.quiet)
@@ -484,16 +504,17 @@ void FindBoundaries(PDB *pdb, GRID *grid)
    Update the boundaries to give space around the protein
 
    17.10.01 Original   By: ACRM
+   19.11.01 Add offsets
 */
 void UpdateBoundaries(GRID *grid, REAL expandSize)
 {
-   grid->xmin -= expandSize;
-   grid->ymin -= expandSize;
-   grid->zmin -= expandSize;
+   grid->xmin -= expandSize - gOffsetX;
+   grid->ymin -= expandSize - gOffsetY;
+   grid->zmin -= expandSize - gOffsetZ;
 
-   grid->xmax += expandSize;
-   grid->ymax += expandSize;
-   grid->zmax += expandSize;
+   grid->xmax += expandSize + gOffsetX;
+   grid->ymax += expandSize + gOffsetY;
+   grid->zmax += expandSize + gOffsetZ;
 }
 
 
@@ -662,6 +683,7 @@ void MarkVoidAndProteinPoints(PDB *pdb, GRID *grid, REAL probeSize)
    Parse the command line
    
    10.10.01 Original    By: ACRM
+   06.02.02 Added -w
 */
 BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
                   REAL *gridStep, REAL *probeSize, REAL *solvSize,
@@ -672,21 +694,22 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    argc--;
    argv++;
 
-   gFlags.printVoids          = FALSE;
-   gFlags.printAtoms          = FALSE;
-   gFlags.printSolvent        = FALSE;
-   gFlags.printRefinedVoids   = FALSE;
-   gFlags.edgeConnected       = FALSE;
-   gFlags.cornerConnected     = FALSE;
-   gFlags.leak                = FALSE;
-   gFlags.quiet               = FALSE;
+   gFlags.printVoids           = FALSE;
+   gFlags.printAtoms           = FALSE;
+   gFlags.printSolvent         = FALSE;
+   gFlags.printRefinedVoids    = FALSE;
+   gFlags.printWaterNeighbours = FALSE;
+   gFlags.edgeConnected        = FALSE;
+   gFlags.cornerConnected      = FALSE;
+   gFlags.leak                 = FALSE;
+   gFlags.quiet                = FALSE;
+   
+   *gridStep                   = DEFAULT_GRID_SIZE;
+   *probeSize                  = DEFAULT_PROBE_SIZE;
+   *solvSize                   = DEFAULT_WATER_SIZE;
+   *doRefine                   = FALSE;
 
-   *gridStep                  = DEFAULT_GRID_SIZE;
-   *probeSize                 = DEFAULT_PROBE_SIZE;
-   *solvSize                  = DEFAULT_WATER_SIZE;
-   *doRefine                  = FALSE;
-
-   infile[0] = outfile[0]     = '\0';
+   infile[0] = outfile[0]      = '\0';
    
    while(argc)
    {
@@ -783,6 +806,40 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
                }
                return(FALSE);
             }
+            break;
+         case 'O':
+            if(argv[0][2] == '\0')
+            {
+               return(FALSE);
+            }
+            else
+            {
+               char direction = argv[0][2];
+               REAL shift;
+
+               argc--;
+               argv++;
+               if((!argc) || !sscanf(argv[0],"%lf", &shift))
+                  return(FALSE);
+               
+               switch(direction)
+               {
+               case 'x':
+                  gOffsetX = shift;
+                  break;
+               case 'y':
+                  gOffsetY = shift;
+                  break;
+               case 'z':
+                  gOffsetZ = shift;
+                  break;
+               default:
+                  return(FALSE);
+               }
+            }
+            break;
+         case 'w':
+            gFlags.printWaterNeighbours = TRUE;
             break;
          default:
             return(FALSE);
@@ -1314,7 +1371,8 @@ University of Reading\n");
    fprintf(stderr,"\nUsage: avp [-q] [-g gridspacing] [-p probesize] \
 [-s solventsize]\n");
    fprintf(stderr,"           [-r] [-e] [-c] [-o[a][s] file] \n");
-   fprintf(stderr,"           [-f file] [-l] [-n file] file.pdb\n");
+   fprintf(stderr,"           [-f file] [-l] [-n file] [-O(xyz) value] \
+[-w] file.pdb\n");
 
    fprintf(stderr,"   -q Quiet - do not report progress\n");
    fprintf(stderr,"   -g Specify the grid spacing (Default: %f)\n",
@@ -1337,6 +1395,8 @@ with -r\n");
 in volume refinement\n");
    fprintf(stderr,"   -n Output atom records for atoms nearest to each \
 void to file.\n");
+   fprintf(stderr,"   -Ox -Oy -Oz Specify an offset for the grid\n");
+   fprintf(stderr,"   -w Print a list of waters that neighbour voids\n");
 
    fprintf(stderr,"\navp (Another Void Program) is a program to \
 calculate void volumes in\n");
@@ -2465,3 +2525,74 @@ int RefineAVoxelNeighbour(GRID *grid, PDB *pdb, POINTLIST *pt,
    return(vcount);
 }
 
+/************************************************************************/
+void PrintWaterNeighbours(FILE *out, PDB *pdb, GRID *grid)
+{
+   PDB  *p;
+   int  ix, iy, iz,
+        grid_x, grid_y, grid_z,
+        nSteps;
+   REAL maxDist, maxDistSq;
+
+   
+   maxDist   = WATER_RADIUS + grid->gridStep;
+   maxDistSq = maxDist * maxDist;
+   nSteps    = 2 * ((maxDist / grid->gridStep) + 1);
+
+   for(p=pdb; p!=NULL; NEXT(p))
+   {
+      if(!strncmp(p->record_type, "HETATM", 6))
+      {
+         if(ISWATER(p))
+         {
+            /* Find the grid point nearest to this water atom           */
+            grid_x = (int)(0.5 + ((p->x - grid->xmin)/grid->gridStep));
+            grid_y = (int)(0.5 + ((p->y - grid->ymin)/grid->gridStep));
+            grid_z = (int)(0.5 + ((p->z - grid->zmin)/grid->gridStep));
+
+            for(ix = grid_x - nSteps; 
+                ix <= grid_x + nSteps; 
+                ix++)
+            {
+               if((ix >= 0) && (ix < grid->ixmax))
+               {
+                  for(iy = grid_y - nSteps; 
+                      iy <= grid_y + nSteps; 
+                      iy++)
+                  {
+                     if((iy >= 0) && (iy < grid->iymax))
+                     {
+                        for(iz = grid_z - nSteps; 
+                            iz <= grid_z + nSteps; 
+                            iz++)
+                        {
+                           if((iz >= 0) && (iz < grid->izmax))
+                           {
+                              VEC3F point;
+
+                              if((grid->grid[ix][iy][iz] == TYPE_VOID) ||
+                                 ISSET(grid->grid[ix][iy][iz], TYPE_ASSIGNED))
+                              {
+                                 point.x = grid->xmin+(ix*grid->gridStep);
+                                 point.y = grid->ymin+(iy*grid->gridStep);
+                                 point.z = grid->zmin+(iz*grid->gridStep);
+                              
+                                 if(DISTSQ(p,(&point)) < maxDistSq)
+                                 {
+                                    fprintf(out, "Water %d (atom %d) is \
+touching a void\n", p->resnum, p->atnum);
+                                    goto nextatom;
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+nextatom: 
+      ;
+   }
+}

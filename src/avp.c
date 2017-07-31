@@ -3,11 +3,11 @@
    Program:    avp (Another Void Program)
    File:       avp.c
    
-   Version:    V1.0
-   Date:       31.10.01
+   Version:    V1.1
+   Date:       18.06.02
    Function:   Find voids in proteins
    
-   Copyright:  (c) University of Reading / Dr. Andrew C. R. Martin 2001
+   Copyright:  (c) University of Reading / Dr. Andrew C. R. Martin 2001-02
    Author:     Dr. Andrew C. R. Martin
    Address:    School of Animal and Microbial Sciences,
                The University of Reading,
@@ -137,6 +137,9 @@
 
    Revision History:
    =================
+   V1.0 31.10.01 Original
+   V1.1 18.06.02 Fixed bug in refining void size
+                 Added marginal water refinement
 
 *************************************************************************/
 /* Program options
@@ -181,6 +184,14 @@
 #define SOLVENT_MULTIPLIER  2     /* Assign grid points as solvent within
                                      this factor of solvent size        */
 #define GRID_EXPAND 2             /* Factor by which to expand grid     */
+
+#define SOLVENT_NO          0     /* Solvent conditions                 */
+#define SOLVENT_BULK        1
+#define SOLVENT_MARGIN      2
+
+#define NSOLVFINESTEP       19    /* Number of fine steps to take in
+                                     each direction when setting solvent
+                                     point at the protein boundary      */
 
 /* Test if an atom is a water                                           */
 #define ISWATER(x)  (!strncmp((x)->resnam,"HOH",3) ||                   \
@@ -275,8 +286,8 @@ BOOL BuildGrid(GRID *grid, REAL gridStep);
 void MarkVoidAndProteinPoints(PDB *pdb, GRID *grid, REAL probeSize);
 BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                        REAL solventMult, BOOL quiet);
-BOOL AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
-                       REAL solvSize);
+int  AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
+                       REAL solvSize, REAL xoff, REAL yoff, REAL zoff);
 void FlagBoxBoundsAsSolvent(GRID *grid, int ixmax, int iymax, int izmax,
                             BOOL quiet);
 BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
@@ -1964,9 +1975,9 @@ void FlagBoxBoundsAsSolvent(GRID *grid, int ixmax, int iymax, int izmax,
 
 
 /************************************************************************/
-/*>BOOL AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
-                          REAL solvSize)
-   --------------------------------------------------------------------
+/*>int AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
+                         REAL solvSize, REAL xoff, REAL yoff, REAL zoff)
+   ---------------------------------------------------------------------
    Input:     
    Output:    
    Returns:   
@@ -1976,9 +1987,14 @@ void FlagBoxBoundsAsSolvent(GRID *grid, int ixmax, int iymax, int izmax,
    then return TRUE
 
    17.10.01 Original   By: ACRM
+   18.06.02 Now distinguishes 3 cases: SOLVENT_BULK (previously 'TRUE'),
+            SOLVENT_NO (previously 'FALSE') and the new case 
+            SOLVENT_MARGIN where this point has solvent neighbours, but
+            is too close to an atom (previously was just 'FALSE')
+            Also now accepts xoff,yoff,zoff offsets 
 */
-BOOL AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
-                       REAL solvSize)
+int AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
+                      REAL solvSize, REAL xoff, REAL yoff, REAL zoff)
 {
    /* If we are not on the boundary of the box                          */
    if((ix>0) && (ix<grid->ixmax) &&
@@ -1986,7 +2002,7 @@ BOOL AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
       (iz>0) && (iz<grid->izmax))
    {
       /* If any neighbour is solvent and there is no atom too close,
-         then return TRUE
+         then return SOLVENT_BULK
       */
       if((grid->grid[ix-1][iy-1][iz-1] == TYPE_SOLVENT) ||
          (grid->grid[ix-1][iy-1][iz] == TYPE_SOLVENT)   ||
@@ -2016,21 +2032,27 @@ BOOL AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
          (grid->grid[ix+1][iy+1][iz+1] == TYPE_SOLVENT))
       {
          if(!AtomNear(pdb, 
-                      grid->xmin + ix*grid->gridStep, 
-                      grid->ymin + iy*grid->gridStep, 
-                      grid->zmin + iz*grid->gridStep, 
+                      grid->xmin + ix*grid->gridStep + xoff, 
+                      grid->ymin + iy*grid->gridStep + yoff, 
+                      grid->zmin + iz*grid->gridStep + zoff, 
                       solvSize, NULL))
          {
-            return(TRUE);
+            return(SOLVENT_BULK);
+         }
+         else
+         {
+            /* This point has solvent and protein neighbours            */
+            return(SOLVENT_MARGIN);
          }
       }
       
-      return(FALSE);
+      /* Not in solvent at all                                          */
+      return(SOLVENT_NO);
    }
    else
    {
       /* It's on the boundary of the box so must be solvent             */
-      return(TRUE);
+      return(SOLVENT_BULK);
    }
 }
 
@@ -2052,15 +2074,21 @@ BOOL AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
 *** rather than the actual atom coordinates to detect being too close  ***
 
    17.10.01 Original   By: ACRM
+   18.06.02 Handles SOLVENT_MARGIN points
 */
 BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep, 
                        REAL solventMult, BOOL quiet)
 {
    BOOL modified = TRUE;
-   int ix, iy, iz, iteration = 1;
-   int numberOfSolvatedNeighbours;
+   int  ix, iy, iz, iteration = 1,solvState;
+   int  numberOfSolvatedNeighbours;
    REAL solvRadiusSq = solventMult * solventStep * 
-                       solventMult * solventStep;
+                       solventMult * solventStep,
+        smallStep    = grid->gridStep / (2*FINEGRIDSTEP),
+        xoff,
+        yoff,
+        zoff;
+   
    
    numberOfSolvatedNeighbours = 
       (int)(solventMult * solventStep / grid->gridStep);
@@ -2096,14 +2124,40 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                if((grid->grid[ix][iy][iz] == TYPE_VOID) ||
                   (grid->grid[ix][iy][iz] == TYPE_SOLVENT2))
                {
-                  if(AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
-                                       solventStep))
+                  if((solvState=AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
+                                                  solventStep,
+                                                  0.0, 0.0, 0.0))
+                     == SOLVENT_BULK)
                   {
                      SetAsSolvent(grid,ix,iy,iz,
                                   numberOfSolvatedNeighbours, 
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                  }
+                  else if(solvState == SOLVENT_MARGIN)
+                  {
+                     for(xoff = (-NSOLVFINESTEP*smallStep);
+                         xoff <= (NSOLVFINESTEP*smallStep);
+                         xoff += smallStep)
+                     {
+                        for(yoff = (-NSOLVFINESTEP*smallStep);
+                            yoff <= (NSOLVFINESTEP*smallStep);
+                            yoff += smallStep)
+                        {
+                           if(AdjacentIsSolvent(pdb, grid, ix, iy, iz,
+                                                solventStep,
+                                                xoff, yoff, 0.0)
+                              == SOLVENT_BULK)
+                           {
+                              SetAsSolvent(grid,ix,iy,iz,
+                                           numberOfSolvatedNeighbours, 
+                                           solvRadiusSq,
+                                           TYPE_SOLVENT);
+                              modified = TRUE;
+                           }
+                        }
+                     }
                   }
                }
             }
@@ -2113,14 +2167,40 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                if((grid->grid[ix][iy][iz] == TYPE_VOID) ||
                   (grid->grid[ix][iy][iz] == TYPE_SOLVENT2))
                {
-                  if(AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
-                                       solventStep))
+                  if((solvState=AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
+                                                  solventStep,
+                                                  0.0, 0.0, 0.0))
+                     == SOLVENT_BULK)
                   {
                      SetAsSolvent(grid,ix,iy,iz,
                                   numberOfSolvatedNeighbours, 
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                  }
+                  else if(solvState == SOLVENT_MARGIN)
+                  {
+                     for(xoff = (-NSOLVFINESTEP*smallStep);
+                         xoff <= (NSOLVFINESTEP*smallStep);
+                         xoff += smallStep)
+                     {
+                        for(yoff = (-NSOLVFINESTEP*smallStep);
+                            yoff <= (NSOLVFINESTEP*smallStep);
+                            yoff += smallStep)
+                        {
+                           if(AdjacentIsSolvent(pdb, grid, ix, iy, iz,
+                                                solventStep,
+                                                xoff, yoff, 0.0)
+                              == SOLVENT_BULK)
+                           {
+                              SetAsSolvent(grid,ix,iy,iz,
+                                           numberOfSolvatedNeighbours, 
+                                           solvRadiusSq,
+                                           TYPE_SOLVENT);
+                              modified = TRUE;
+                           }
+                        }
+                     }
                   }
                }
             }
@@ -2134,14 +2214,40 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                if((grid->grid[ix][iy][iz] == TYPE_VOID) ||
                   (grid->grid[ix][iy][iz] == TYPE_SOLVENT2))
                {
-                  if(AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
-                                       solventStep))
+                  if((solvState=AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
+                                                  solventStep,
+                                                  0.0, 0.0, 0.0))
+                     == SOLVENT_BULK)
                   {
                      SetAsSolvent(grid,ix,iy,iz,
                                   numberOfSolvatedNeighbours, 
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                  }
+                  else if(solvState == SOLVENT_MARGIN)
+                  {
+                     for(xoff = (-NSOLVFINESTEP*smallStep);
+                         xoff <= (NSOLVFINESTEP*smallStep);
+                         xoff += smallStep)
+                     {
+                        for(zoff = (-NSOLVFINESTEP*smallStep);
+                            zoff <= (NSOLVFINESTEP*smallStep);
+                            zoff += smallStep)
+                        {
+                           if(AdjacentIsSolvent(pdb, grid, ix, iy, iz,
+                                                solventStep,
+                                                xoff, 0.0, zoff)
+                              == SOLVENT_BULK)
+                           {
+                              SetAsSolvent(grid,ix,iy,iz,
+                                           numberOfSolvatedNeighbours, 
+                                           solvRadiusSq,
+                                           TYPE_SOLVENT);
+                              modified = TRUE;
+                           }
+                        }
+                     }
                   }
                }
             }
@@ -2151,14 +2257,40 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                if((grid->grid[ix][iy][iz] == TYPE_VOID) ||
                   (grid->grid[ix][iy][iz] == TYPE_SOLVENT2))
                {
-                  if(AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
-                                       solventStep))
+                  if((solvState=AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
+                                                  solventStep,
+                                                  0.0, 0.0, 0.0))
+                     == SOLVENT_BULK)
                   {
                      SetAsSolvent(grid,ix,iy,iz,
                                   numberOfSolvatedNeighbours, 
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                  }
+                  else if(solvState == SOLVENT_MARGIN)
+                  {
+                     for(xoff = (-NSOLVFINESTEP*smallStep);
+                         xoff <= (NSOLVFINESTEP*smallStep);
+                         xoff += smallStep)
+                     {
+                        for(zoff = (-NSOLVFINESTEP*smallStep);
+                            zoff <= (NSOLVFINESTEP*smallStep);
+                            zoff += smallStep)
+                        {
+                           if(AdjacentIsSolvent(pdb, grid, ix, iy, iz,
+                                                solventStep,
+                                                xoff, 0.0, zoff)
+                              == SOLVENT_BULK)
+                           {
+                              SetAsSolvent(grid,ix,iy,iz,
+                                           numberOfSolvatedNeighbours, 
+                                           solvRadiusSq,
+                                           TYPE_SOLVENT);
+                              modified = TRUE;
+                           }
+                        }
+                     }
                   }
                }
             }
@@ -2175,14 +2307,40 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                if((grid->grid[ix][iy][iz] == TYPE_VOID) ||
                   (grid->grid[ix][iy][iz] == TYPE_SOLVENT2))
                {
-                  if(AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
-                                       solventStep))
+                  if((solvState=AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
+                                                  solventStep,
+                                                  0.0, 0.0, 0.0))
+                     == SOLVENT_BULK)
                   {
                      SetAsSolvent(grid,ix,iy,iz,
                                   numberOfSolvatedNeighbours, 
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                  }
+                  else if(solvState == SOLVENT_MARGIN)
+                  {
+                     for(yoff = (-NSOLVFINESTEP*smallStep);
+                         yoff <= (NSOLVFINESTEP*smallStep);
+                         yoff += smallStep)
+                     {
+                        for(zoff = (-NSOLVFINESTEP*smallStep);
+                            zoff <= (NSOLVFINESTEP*smallStep);
+                            zoff += smallStep)
+                        {
+                           if(AdjacentIsSolvent(pdb, grid, ix, iy, iz,
+                                                solventStep,
+                                                0.0, yoff, zoff)
+                              == SOLVENT_BULK)
+                           {
+                              SetAsSolvent(grid,ix,iy,iz,
+                                           numberOfSolvatedNeighbours, 
+                                           solvRadiusSq,
+                                           TYPE_SOLVENT);
+                              modified = TRUE;
+                           }
+                        }
+                     }
                   }
                }
             }
@@ -2192,14 +2350,40 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                if((grid->grid[ix][iy][iz] == TYPE_VOID) ||
                   (grid->grid[ix][iy][iz] == TYPE_SOLVENT2))
                {
-                  if(AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
-                                       solventStep))
+                  if((solvState=AdjacentIsSolvent(pdb, grid, ix, iy, iz, 
+                                                  solventStep,
+                                                  0.0, 0.0, 0.0))
+                     == SOLVENT_BULK)
                   {
                      SetAsSolvent(grid,ix,iy,iz,
                                   numberOfSolvatedNeighbours, 
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                  }
+                  else if(solvState == SOLVENT_MARGIN)
+                  {
+                     for(yoff = (-NSOLVFINESTEP*smallStep);
+                         yoff <= (NSOLVFINESTEP*smallStep);
+                         yoff += smallStep)
+                     {
+                        for(zoff = (-NSOLVFINESTEP*smallStep);
+                            zoff <= (NSOLVFINESTEP*smallStep);
+                            zoff += smallStep)
+                        {
+                           if(AdjacentIsSolvent(pdb, grid, ix, iy, iz,
+                                                solventStep,
+                                                0.0, yoff, zoff)
+                              == SOLVENT_BULK)
+                           {
+                              SetAsSolvent(grid,ix,iy,iz,
+                                           numberOfSolvatedNeighbours, 
+                                           solvRadiusSq,
+                                           TYPE_SOLVENT);
+                              modified = TRUE;
+                           }
+                        }
+                     }
                   }
                }
             }
@@ -2471,7 +2655,7 @@ int RefineVoxelNeighbours(GRID *grid, PDB *pdb, POINTLIST *pt,
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0,  0, -1, 
                                    fineGridStep, fineProbeSize);
    
-#ifdef EXTRAS
+#ifndef NO_EXTRAS
    /* Look at the 12 edge-neighbours                                    */
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  -1,  -1,  0, 
                                    fineGridStep, fineProbeSize);

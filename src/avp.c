@@ -117,7 +117,7 @@
    1. Create a grid around the protein
    2. Mark each point on the grid as protein or void. i.e. assume any
       point not occupied by protein is void
-   3. Mark all void point on the surface of the box as solvent
+   3. Mark all void points on the surface of the box as solvent
    4. (The slightly complex bit) Walk across the grid in all 6 directions
       changing void points to solvent if they have a neighbour that is 
       solvent and no atoms within the solvent probe size distance; also
@@ -952,6 +952,9 @@ void SetAsSolvent(GRID *grid, int ix, int iy, int iz,
 
    Prints non-void grid points (i.e. solvent and protein points)
 
+   Takes an option to print the refined grid rather than the initial
+   grid, but this currently does nothing
+
    17.10.01 Original   By: ACRM
 */
 void PrintGrid(FILE *fp, GRID *grid, BOOL refined)
@@ -1362,17 +1365,18 @@ void SetRadii(PDB *pdb)
    Prints a usage message
 
    17.10.01 Original   By: ACRM
+   17.06.02 V1.1
 */
 void Usage(void)
 {
-   fprintf(stderr,"\navp V1.0 (c) 2001, Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\navp V1.1 (c) 2001-2, Dr. Andrew C.R. Martin, \
 University of Reading\n");
 
    fprintf(stderr,"\nUsage: avp [-q] [-g gridspacing] [-p probesize] \
 [-s solventsize]\n");
    fprintf(stderr,"           [-r] [-e] [-c] [-o[a][s] file] \n");
    fprintf(stderr,"           [-f file] [-l] [-n file] [-O(xyz) value] \
-[-w] file.pdb\n");
+[-w] [file.pdb [file.out]]\n");
 
    fprintf(stderr,"   -q Quiet - do not report progress\n");
    fprintf(stderr,"   -g Specify the grid spacing (Default: %f)\n",
@@ -1424,6 +1428,8 @@ very small diameter\n");
    original PDB file.
 
    17.10.01 Original   By: ACRM
+   17.06.02 Added printing of largest individual void
+   18.06.02 Added printing of void mid-point
 */
 void PrintVoids(FILE *out, VOIDS *voids)
 {
@@ -1432,14 +1438,23 @@ void PrintVoids(FILE *out, VOIDS *voids)
    int   count  = 1,
          resnum = 2,
          atomnum = 2000;
-   REAL  totalVoidVolume = (REAL)0.0;
+   REAL  totalVoidVolume   = (REAL)0.0,
+         largestVoidVolume = (REAL)0.0;
    
    
    for(v=voids, resnum=2; v!=NULL; NEXT(v), resnum++)
    {
-      fprintf(out,"Void: %d voxelCount: %d volume: %f\n",
-              count++, v->voxelCount, v->volume);
+      fprintf(out,"Void: %4d voxelCount: %3d volume: %.3f \
+midpoint: %.3f %.3f %.3f\n",
+              count++, v->voxelCount, v->volume,
+              (v->xmin + v->xmax)/2.0,
+              (v->ymin + v->ymax)/2.0,
+              (v->zmin + v->zmax)/2.0);
       totalVoidVolume += v->volume;
+      if(v->volume > largestVoidVolume)
+      {
+         largestVoidVolume = v->volume;
+      }
 
       if(gFlags.printVoids)
       {
@@ -1472,6 +1487,7 @@ void PrintVoids(FILE *out, VOIDS *voids)
    }
 
    fprintf(out, "\nTotal void volume: %f\n", totalVoidVolume);
+   fprintf(out, "Largest void volume: %f\n", largestVoidVolume);
 }
 
 
@@ -2290,11 +2306,17 @@ BOOL RefineVoidVolumes(VOIDS *voidlist, GRID *grid, PDB *pdb,
    int       vcount  = 0,
              nvoids  = 0;
    REAL      voxelVolume,
-             fineGridStep;
+             fineGridStep,
+             fineProbeSize;
    POINTLIST *pt;
    
    fineGridStep = grid->gridStep / FINEGRIDSTEP;
    voxelVolume = fineGridStep * fineGridStep * fineGridStep;
+
+   /* Calculate a probe size for using with the sub-voxels. This will
+      be fineGridStep/courseGridStep of the normal probe size
+   */
+   fineProbeSize = probeSize * fineGridStep / grid->gridStep;
    
    for(v=voidlist; v!=NULL; NEXT(v))
    {
@@ -2308,7 +2330,7 @@ BOOL RefineVoidVolumes(VOIDS *voidlist, GRID *grid, PDB *pdb,
       for(pt=v->pointlist; pt!=NULL; NEXT(pt))
       {
          vcount += RefineVoxel(grid, pdb, pt, fineGridStep,
-                               probeSize);
+                               fineProbeSize);
       }
 #ifdef DEBUG
       fprintf(stderr,"      Stage 1 refinement volume: %f\n",
@@ -2318,9 +2340,9 @@ BOOL RefineVoidVolumes(VOIDS *voidlist, GRID *grid, PDB *pdb,
       for(pt=v->pointlist; pt!=NULL; NEXT(pt))
       {
          vcount += RefineVoxelNeighbours(grid, pdb, pt, fineGridStep,
-                                         probeSize);
+                                         fineProbeSize);
       }
-      
+
       /* Calculate the new volume for this void                         */
       v->volume = vcount * voxelVolume;
    }
@@ -2330,7 +2352,7 @@ BOOL RefineVoidVolumes(VOIDS *voidlist, GRID *grid, PDB *pdb,
 
 /************************************************************************/
 /*>int RefineVoxel(GRID *grid, PDB *pdb, POINTLIST *pt, REAL fineGridStep,
-                   REAL probeSize)
+                   REAL fineProbeSize)
    -----------------------------------------------------------------------
    Input:     
    Output:    
@@ -2340,9 +2362,10 @@ BOOL RefineVoidVolumes(VOIDS *voidlist, GRID *grid, PDB *pdb,
    see if it is protein or void
 
    31.10.01 Original   By: ACRM
+   18.06.02 Changed probeSize to fineProbeSize
 */
 int RefineVoxel(GRID *grid, PDB *pdb, POINTLIST *pt, REAL fineGridStep,
-                REAL probeSize)
+                REAL fineProbeSize)
 {
    REAL  xmin, xmax,
          ymin, ymax,
@@ -2387,8 +2410,8 @@ int RefineVoxel(GRID *grid, PDB *pdb, POINTLIST *pt, REAL fineGridStep,
                   break;
                }
                
-               cutoffSq = (probeSize+p->occ) * 
-                  (probeSize+p->occ);
+               cutoffSq = (fineProbeSize+p->occ) * 
+                          (fineProbeSize+p->occ); 
                if(DISTSQ(&gridCoor, p) < cutoffSq)
                {
                   isVoid = FALSE;
@@ -2416,8 +2439,8 @@ GLY Z%4d    %8.3f%8.3f%8.3f  1.00 20.00\n",
 
 /************************************************************************/
 /*>int RefineVoxelNeighbours(GRID *grid, PDB *pdb, POINTLIST *pt, 
-                             REAL fineGridStep, REAL probeSize)
-   ---------------------------------------------------------------
+                             REAL fineGridStep, REAL fineProbeSize)
+   ----------------------------------------------------------------
    Input:     
    Output:    
    Returns:   
@@ -2426,33 +2449,81 @@ GLY Z%4d    %8.3f%8.3f%8.3f  1.00 20.00\n",
    sub-voxels they might contain
 
    31.10.01 Original   By: ACRM
+   17.06.02 Added edge and corner neighbours
+   18.06.02 Changed probeSize to fineProbeSize
 */
 int RefineVoxelNeighbours(GRID *grid, PDB *pdb, POINTLIST *pt, 
-                          REAL fineGridStep, REAL probeSize)
+                          REAL fineGridStep, REAL fineProbeSize)
 {
    int vcount = 0;
    
    /* Look at the 6 (plane) neighbours of this point                    */
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1,  0,  0, 
-                                   fineGridStep, probeSize);
+                                   fineGridStep, fineProbeSize);
    vcount += RefineAVoxelNeighbour(grid, pdb, pt, -1,  0,  0, 
-                                   fineGridStep, probeSize);
+                                   fineGridStep, fineProbeSize);
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0,  1,  0, 
-                                   fineGridStep, probeSize);
+                                   fineGridStep, fineProbeSize);
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0, -1,  0, 
-                                   fineGridStep, probeSize);
+                                   fineGridStep, fineProbeSize);
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0,  0,  1, 
-                                   fineGridStep, probeSize);
+                                   fineGridStep, fineProbeSize);
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0,  0, -1, 
-                                   fineGridStep, probeSize);
+                                   fineGridStep, fineProbeSize);
    
+#ifdef EXTRAS
+   /* Look at the 12 edge-neighbours                                    */
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  -1,  -1,  0, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  -1,  0,  -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  -1,  1,  0, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  -1,  0,  1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0, -1, -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0, -1,  1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0,  1, -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0,  1,  1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1, -1,  0, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1,  0, -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1,  0,  1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1,  1,  0, 
+                                   fineGridStep, fineProbeSize);
+
+   /* Look at the 8 corner neighbours                                   */
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt, -1, -1, -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt, -1, -1,  1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt, -1,  1, -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt, -1,  1,  1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1, -1, -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1, -1,  1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1,  1, -1, 
+                                   fineGridStep, fineProbeSize);
+   vcount += RefineAVoxelNeighbour(grid, pdb, pt,  1,  1,  1, 
+                                   fineGridStep, fineProbeSize);
+#endif
+
    return(vcount);
 }
 
 /************************************************************************/
 /*>int RefineAVoxelNeighbour(GRID *grid, PDB *pdb, POINTLIST *pt,  
                              int xoff, int yoff, int zoff, 
-                             REAL fineGridStep, REAL probeSize)
+                             REAL fineGridStep, REAL fineProbeSize)
    ----------------------------------------------------------------
    Input:     
    Output:    
@@ -2467,10 +2538,11 @@ int RefineVoxelNeighbours(GRID *grid, PDB *pdb, POINTLIST *pt,
    is allowed to be a solvent voxel.
 
    31.10.01 Original   By: ACRM
+   18.06.02 Changed probeSize to fineProbeSize
 */
 int RefineAVoxelNeighbour(GRID *grid, PDB *pdb, POINTLIST *pt,  
                           int xoff, int yoff, int zoff, 
-                          REAL fineGridStep, REAL probeSize)
+                          REAL fineGridStep, REAL fineProbeSize)
 {
    int ix, iy, iz, vcount=0;
    POINTLIST npt;
@@ -2517,8 +2589,8 @@ int RefineAVoxelNeighbour(GRID *grid, PDB *pdb, POINTLIST *pt,
          npt.iy      = iy;
          npt.iz      = iz;
          
-         vcount = RefineVoxel(grid, pdb, &npt, fineGridStep, probeSize);
-         
+         vcount = RefineVoxel(grid, pdb, &npt, fineGridStep, 
+                              fineProbeSize);
       }
    }
    

@@ -1,3 +1,4 @@
+#define DEBUG 1
 /*************************************************************************
 
    Program:    avp (Another Void Program)
@@ -145,6 +146,7 @@
    V1.2 02.07.02 Uses constructed neighbour lists in finding solvent as
                  well as in void refinement to speed things up
                  considerably!
+                 Differentiates between surface and buried voids
 
 *************************************************************************/
 /* Program options
@@ -158,6 +160,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "bioplib/pdb.h"
 #include "bioplib/general.h"
 #include "bioplib/macros.h"
@@ -271,6 +274,7 @@ typedef struct
    BOOL printNeighbours;
    BOOL leak;
    BOOL quiet;
+   BOOL reassignVoids;
 }  FLAGS;
 
 
@@ -336,6 +340,13 @@ int RefineAVoxelNeighbour(GRID *grid, PDB *pdb, POINTLIST *pt,
                           REAL fineGridStep, REAL probeSize);
 void PrintWaterNeighbours(FILE *out, PDB *pdb, GRID *grid);
 BOOL IsSolvent(GRID *grid, int ix, int iy, int iz);
+void ReassignVoidPoints(GRID *grid, REAL probeSize);
+void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi, 
+                         PDB **neighbours, int numNeighbours,
+                         REAL probeSize);
+int CombineNeighbours(GRID *grid, int xi, int yi, int zi, 
+                      PDB **neighbours);
+BOOL NeighboursAreProtein(GRID *grid, int ix, int iy, int iz);
 
 
 /************************************************************************/
@@ -447,6 +458,15 @@ VOIDS *FindVoids(FILE *out, PDB *pdb, REAL gridStep, REAL solvSize,
       fprintf(stderr,"Marking solvent points on grid\n");
    }
    MarkSolventPoints(pdb, &grid, solvSize, SOLVENT_MULTIPLIER, FALSE);
+
+   if(gFlags.reassignVoids)
+   {
+      if(!gFlags.quiet)
+      {
+         fprintf(stderr,"Reassigning void point on grid\n");
+      }
+      ReassignVoidPoints(&grid, probeSize);
+   }
 
    if(gFlags.printSolvent || gFlags.printAtoms)
    {
@@ -707,6 +727,7 @@ void MarkVoidAndProteinPoints(PDB *pdb, GRID *grid, REAL probeSize)
    
    10.10.01 Original    By: ACRM
    06.02.02 Added -w
+   09.07.02 Added -R
 */
 BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
                   REAL *gridStep, REAL *probeSize, REAL *solvSize,
@@ -726,6 +747,7 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    gFlags.cornerConnected      = FALSE;
    gFlags.leak                 = FALSE;
    gFlags.quiet                = FALSE;
+   gFlags.reassignVoids        = FALSE;
    
    *gridStep                   = DEFAULT_GRID_SIZE;
    *probeSize                  = DEFAULT_PROBE_SIZE;
@@ -760,6 +782,10 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
             break;
          case 'r':
             *doRefine = TRUE;
+            break;
+         case 'R':
+            *doRefine = TRUE;
+            gFlags.reassignVoids = TRUE;
             break;
          case 'e':
             gFlags.edgeConnected = TRUE;
@@ -1419,10 +1445,11 @@ void SetRadii(PDB *pdb)
    17.10.01 Original   By: ACRM
    17.06.02 V1.1
    02.07.02 V1.2
+   09.07.02 V1.4 - added -R
 */
 void Usage(void)
 {
-   fprintf(stderr,"\navp V1.2 (c) 2001-2, Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\navp V1.3 (c) 2001-2, Dr. Andrew C.R. Martin, \
 University of Reading\n");
 
    fprintf(stderr,"\nUsage: avp [-q] [-g gridspacing] [-p probesize] \
@@ -1439,6 +1466,7 @@ University of Reading\n");
    fprintf(stderr,"   -s Specify the solvent size (Default: %f)\n",
            DEFAULT_WATER_SIZE);
    fprintf(stderr,"   -r Refine void sizes\n");
+   fprintf(stderr,"   -R Redefine void points and refine void sizes\n");
    fprintf(stderr,"   -e Assign points to voids with edge connections\n");
    fprintf(stderr,"   -c Assign points to voids with corner connections \
 (implies -e)\n");
@@ -1503,7 +1531,7 @@ void PrintVoids(FILE *out, VOIDS *voids)
    for(v=voids, resnum=2; v!=NULL; NEXT(v), resnum++)
    {
       fprintf(out,"Void: %4d voxelCount: %3d volume: %8.3f \
-midpoint: %8.3f %8.3f %8.3f %s\n",
+midpoint: %8.3f%8.3f%8.3f %s\n",
               count++, v->voxelCount, v->volume,
               (v->xmin + v->xmax)/2.0,
               (v->ymin + v->ymax)/2.0,
@@ -1593,9 +1621,10 @@ midpoint: %8.3f %8.3f %8.3f %s\n",
    Output:    
    Returns:   
 
-   Tests whether an atom is near to the specified position
-   If the neighbours array is non-NULL, then fills it in with all
-   neighbouring atoms
+   Tests whether any atom is near to the specified position
+   If the neighbours array is non-NULL, then tests whether it is already
+   filled in with neighbours. If not, fills it in with all neighbouring 
+   atoms.
 
    17.10.01 Original   By: ACRM
    31.01.01 Added code to build neighbours list
@@ -1612,14 +1641,14 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
    VEC3F      point;
    REAL       cutoffSq,
               cutoff2Sq;
-   REAL       xmin,
-              xmax,
-              ymin,
-              ymax,
-              zmin,
-              zmax;
-   int        start,
-              stop,
+   REAL       xmin = 0.0,
+              xmax = 0.0,
+              ymin = 0.0,
+              ymax = 0.0,
+              zmin = 0.0,
+              zmax = 0.0;
+   int        start = 0,
+              stop = 0,
               neighbCount = 0,
               i;
    BOOL       retValue = FALSE;
@@ -1744,9 +1773,9 @@ a grid point exceeded. Increase MAXNEIGHBOURS\n");
             }
 
             /* Calculate the cutoff and see if we are in range          */
-            cutoffSq = (probeSize+neighbours[i]->occ) * 
-                       (probeSize+neighbours[i]->occ);
-            if(DISTSQ(neighbours[i], &point) < cutoffSq)
+            cutoffSq = (probeSize+p->occ) * 
+                       (probeSize+p->occ);
+            if(DISTSQ(p, &point) < cutoffSq)
             {
                retValue = TRUE;
                break;
@@ -2997,5 +3026,287 @@ BOOL IsSolvent(GRID *grid, int ix, int iy, int iz)
    return(FALSE);
 }
 
+
+
+/************************************************************************/
+void ReassignVoidPoints(GRID *grid, REAL probeSize)
+{
+   REAL x,  y,  z;
+   int  xi, yi, zi,
+        numNeighbours;
+   PDB  *neighbours[MAXNEIGHBOURS];
+   
+   
+   for(x=grid->xmin, xi=0; x<=grid->xmax; x+=grid->gridStep, xi++)
+   {
+      for(y=grid->ymin, yi=0; y<=grid->ymax; y+=grid->gridStep, yi++)
+      {
+         for(z=grid->zmin, zi=0; z<=grid->zmax; z+=grid->gridStep, zi++)
+         {
+            /* If this point has been assigned as protein               */
+            if(grid->grid[xi][yi][zi] == TYPE_PROTEIN)
+            {
+               if(NeighboursAreProtein(grid,xi,yi,zi))
+               {
+                  /* Create a combined list of all the atoms neighbouring 
+                     this protein point and all adjacent protein points
+                  */
+                  numNeighbours = CombineNeighbours(grid, xi, yi, zi, 
+                                                    neighbours);
+                  doReassignVoidPoint(grid, xi, yi, zi, neighbours,
+                                      numNeighbours, probeSize);
+               }
+            }
+         }
+      }
+   }
+   
+}
+
+
+/************************************************************************/
+/*
+  the occupancy field stores the radii
+ */
+void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi, 
+                         PDB **neighbours, int numNeighbours,
+                         REAL probeSize)
+{
+   int   i, j, k;
+   PDB   *p, *q, *r;
+   REAL  minDistSq,
+         distSq,
+         dist,
+         d,
+         ps,
+         nearestAtomDist;
+   VEC3F pq,
+         pt;
+   BOOL  isVoid;
+#ifdef DEBUG
+   PDB   *nearestAtom = NULL;
+#endif
+   
+   /* Enforce a minimum probe size of 0.1A - otherwise virtually every 
+      protein point will get converted back to void
+   */
+   ps = MAX(probeSize, (REAL)0.1);
+      
+   for(i=0; i<numNeighbours; i++)
+   {
+      for(j=i+1; j<numNeighbours; j++)
+      {
+         p = neighbours[i];
+         q = neighbours[j];
+         
+         /* Calculate the sum of the two atom radii plus the diameter of
+            the probe. An atom pair must be separated by at least this
+            amount for us to be interested
+         */
+         minDistSq = (p->occ + q->occ + (ps * 2.0)) *
+                     (p->occ + q->occ + (ps * 2.0));
+         /* Calculate the actual separation of these two atoms          */
+         distSq = DISTSQ(p, q);
+
+         /* If these two atoms are separated by more than the sum of their
+            radii plus the diameter of the probe, then walk along the 
+            vector between then and see if any point is at least a probe 
+            radius away from all other atoms
+         */
+         if(distSq > minDistSq)
+         {
+            /* Calculate the distance between the two point (i.e. the
+               length of the vector between them)
+            */
+            dist = (REAL)sqrt((double)distSq);
+            /* Now define the unit vector                               */
+            pq.x = (q->x - p->x) / dist;
+            pq.y = (q->y - p->y) / dist;
+            pq.z = (q->z - p->z) / dist;
+
+            /* Now make steps along the line in 0.05A units             */
+            for(d = p->occ+ps; d <= (dist - q->occ - ps ); d += 0.05)
+            {
+               pt.x = p->x + (d*pq.x);
+               pt.y = p->y + (d*pq.y);
+               pt.z = p->z + (d*pq.z);
+
+               /* If this point is within the current voxel             */
+               if((pt.x >= (grid->xmin + 
+                            (((REAL)xi-0.5) * grid->gridStep))) &&
+                  (pt.x <  (grid->xmin + 
+                            (((REAL)xi+0.5) * grid->gridStep))) &&
+                  (pt.y >= (grid->ymin + 
+                            (((REAL)yi-0.5) * grid->gridStep))) &&
+                  (pt.y <  (grid->ymin + 
+                            (((REAL)yi+0.5) * grid->gridStep))) &&
+                  (pt.z >= (grid->zmin + 
+                            (((REAL)zi-0.5) * grid->gridStep))) &&
+                  (pt.z <  (grid->zmin + 
+                            (((REAL)zi+0.5) * grid->gridStep))))
+               {
+                  /* Check the distances to all neighbouring atoms. Assume
+                     that if all atoms are sufficiently distant that there
+                     is actually a void point along this vector, once that
+                     is shown not to be true, set isVoid to FALSE and 
+                     break out of the loop
+                  */
+                  isVoid = TRUE;
+                  nearestAtomDist = 100000.0;
+                  for(k=0; k<numNeighbours; k++)
+                  {
+                     r = neighbours[k];
+                     minDistSq = (r->occ + ps) * (r->occ + ps);
+                     distSq = DISTSQ(r, &pt);
+                     if(distSq < minDistSq)
+                     {
+                        isVoid = FALSE;
+                        break;
+                     }
+                     if(distSq < nearestAtomDist)
+                     {
+                        nearestAtomDist = distSq;
+                        nearestAtom = r;
+                     }
+                  }
+                  
+                  /* We have found a point along this line which is a void
+                     point. Reassign the current grid point from protein
+                     to void and return.
+                  */
+                  if(isVoid)
+                  {
+                     grid->grid[xi][yi][zi] = TYPE_VOID;
+#ifdef DEBUG
+                     fprintf(stderr,"\nAtoms %d and %d are separated by \
+%.1fA (required separation %.1fA)\n", 
+                             p->atnum, q->atnum, dist, sqrt(minDistSq));
+                     fprintf(stderr,"At point %8.3f%8.3f%8.3f\n",
+                             pt.x, pt.y, pt.z);
+                     fprintf(stderr, "Nearest atom distance was %f to \
+atom %d\n",
+                             sqrt((double)nearestAtomDist), 
+                             nearestAtom->atnum);
+#endif
+                     return;
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+
+
+
+/************************************************************************/
+int CombineNeighbours(GRID *grid, int xi, int yi, int zi, 
+                      PDB **neighbours)
+{
+   int  numNeighbours = 0,
+        i, j, k, m, n;
+   BOOL found;
+
+   for(i=xi-1; i<=xi+1; i++)
+   {
+      if((i>=0) && (i<grid->ixmax))
+      {
+         for(j=yi-1; j<=yi+1; j++)
+         {
+            if((j>=0) && (j<grid->iymax))
+            {
+               for(k=zi-1; k<=zi+1; k++)
+               {
+                  if((k>=0) && (k<grid->izmax))
+                  {
+                     /* Step through the neighbours listed for this 
+                        grid point
+                     */
+                     for(n=0; 
+                         (n < MAXNEIGHBOURS) && 
+                            (grid->neighbours[xi][yi][zi][n] != NULL);
+                         n++)
+                     {
+                        /* See if this neighbour is already in our
+                           combined list
+                        */
+                        found = FALSE;
+                        for(m=0; m<numNeighbours; m++)
+                        {
+                           if(grid->neighbours[xi][yi][zi][n] ==
+                              neighbours[m])
+                           {
+                              found = TRUE;
+                              break;
+                           }
+                        }
+                        /* If not in the combined list, add it          */
+                        if(!found)
+                        {
+                           if(numNeighbours >= MAXNEIGHBOURS)
+                           {
+                              fprintf(stderr,"Warning: Maximum number of \
+neighbours exceeded in combining neighbour lists.\n\
+Increase MAXNEIGHBOURS!\n");
+                              return(numNeighbours);
+                           }
+                           neighbours[numNeighbours++] =
+                              grid->neighbours[xi][yi][zi][n];
+                        }
+                     }  /* Loop through neighbours                      */
+                  }
+               }  /* Loop through z                                     */
+            }
+         }  /* Loop through y                                           */
+      }
+   }  /* Loop through x                                                 */
+
+   return(numNeighbours);
+}
+
+
+#define NUMGRIDNEIGHBOURS2 1
+BOOL NeighboursAreProtein(GRID *grid, int ix, int iy, int iz)
+{
+   int i, j, k;
+
+   for(i=ix-NUMGRIDNEIGHBOURS2; i<=ix+NUMGRIDNEIGHBOURS2; i++)
+   {
+      if((i>=0) && (i<grid->ixmax))
+      {
+         for(j=iy-NUMGRIDNEIGHBOURS2; j<=iy+NUMGRIDNEIGHBOURS2; j++)
+         {
+            if((j>=0) && (j<grid->iymax))
+            {
+               for(k=iz-NUMGRIDNEIGHBOURS2; k<=iz+NUMGRIDNEIGHBOURS2; k++)
+               {
+                  if((k>=0) && (k<grid->izmax))
+                  {
+                     if(grid->grid[i][j][k] != TYPE_PROTEIN)
+                     {
+                        return(FALSE);
+                     }
+                  }
+                  else
+                  {
+                     return(FALSE);
+                  }
+               }
+            }
+            else
+            {
+               return(FALSE);
+            }
+         }
+      }
+      else
+      {
+         return(FALSE);
+      }
+   }
+
+   return(TRUE);
+}
 
 

@@ -165,7 +165,7 @@
 #include "bioplib/general.h"
 #include "bioplib/macros.h"
 #include "bioplib/MathType.h"
-
+#include "raybox.h"
 
 /************************************************************************/
 /* Defines and macros
@@ -347,6 +347,8 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
 int CombineNeighbours(GRID *grid, int xi, int yi, int zi, 
                       PDB **neighbours);
 BOOL NeighboursAreProtein(GRID *grid, int ix, int iy, int iz);
+void ChangeVoxel(GRID *grid, int ix, int iy, int iz, VEC3F pt);
+
 
 
 /************************************************************************/
@@ -3081,7 +3083,10 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
          ps,
          nearestAtomDist;
    VEC3F pq,
-         pt;
+         pt,
+         pV,
+         corner1,
+         corner2;
    BOOL  isVoid;
 #ifdef DEBUG
    PDB   *nearestAtom = NULL;
@@ -3091,14 +3096,27 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
       protein point will get converted back to void
    */
    ps = MAX(probeSize, (REAL)0.1);
-      
+
+   /* Calculate the bounding corners of this voxel                      */
+   corner1.x = (grid->xmin + (((REAL)xi-0.5) * grid->gridStep));
+   corner1.y = (grid->ymin + (((REAL)yi-0.5) * grid->gridStep));
+   corner1.z = (grid->zmin + (((REAL)zi-0.5) * grid->gridStep));
+   corner2.x = (grid->xmin + (((REAL)xi+0.5) * grid->gridStep));
+   corner2.y = (grid->ymin + (((REAL)yi+0.5) * grid->gridStep));
+   corner2.z = (grid->zmin + (((REAL)zi+0.5) * grid->gridStep));
+
+   /* Run through all the neighbouring atoms                            */
    for(i=0; i<numNeighbours; i++)
    {
+      p = neighbours[i];
+      pV.x = p->x;
+      pV.y = p->y;
+      pV.z = p->z;
+         
       for(j=i+1; j<numNeighbours; j++)
       {
-         p = neighbours[i];
          q = neighbours[j];
-         
+
          /* Calculate the sum of the two atom radii plus the diameter of
             the probe. An atom pair must be separated by at least this
             amount for us to be interested
@@ -3115,7 +3133,7 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
          */
          if(distSq > minDistSq)
          {
-            /* Calculate the distance between the two point (i.e. the
+            /* Calculate the distance between the two points (i.e. the
                length of the vector between them)
             */
             dist = (REAL)sqrt((double)distSq);
@@ -3124,71 +3142,86 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
             pq.y = (q->y - p->y) / dist;
             pq.z = (q->z - p->z) / dist;
 
-            /* Now make steps along the line in 0.05A units             */
-            for(d = p->occ+ps; d <= (dist - q->occ - ps ); d += 0.05)
+            /* Now see if the vector intersects the voxel of interest   */
+            if(DoesLineCrossBox(pV, pq, dist, corner1, corner2))
             {
-               pt.x = p->x + (d*pq.x);
-               pt.y = p->y + (d*pq.y);
-               pt.z = p->z + (d*pq.z);
-
-               /* If this point is within the current voxel             */
-               if((pt.x >= (grid->xmin + 
-                            (((REAL)xi-0.5) * grid->gridStep))) &&
-                  (pt.x <  (grid->xmin + 
-                            (((REAL)xi+0.5) * grid->gridStep))) &&
-                  (pt.y >= (grid->ymin + 
-                            (((REAL)yi-0.5) * grid->gridStep))) &&
-                  (pt.y <  (grid->ymin + 
-                            (((REAL)yi+0.5) * grid->gridStep))) &&
-                  (pt.z >= (grid->zmin + 
-                            (((REAL)zi-0.5) * grid->gridStep))) &&
-                  (pt.z <  (grid->zmin + 
-                            (((REAL)zi+0.5) * grid->gridStep))))
+               /* Now make steps along the line in 0.05A units          */
+               for(d = p->occ+ps; d <= (dist - q->occ - ps ); d += 0.05)
                {
-                  /* Check the distances to all neighbouring atoms. Assume
-                     that if all atoms are sufficiently distant that there
-                     is actually a void point along this vector, once that
-                     is shown not to be true, set isVoid to FALSE and 
-                     break out of the loop
-                  */
-                  isVoid = TRUE;
-                  nearestAtomDist = 100000.0;
-                  for(k=0; k<numNeighbours; k++)
-                  {
-                     r = neighbours[k];
-                     minDistSq = (r->occ + ps) * (r->occ + ps);
-                     distSq = DISTSQ(r, &pt);
-                     if(distSq < minDistSq)
-                     {
-                        isVoid = FALSE;
-                        break;
-                     }
-                     if(distSq < nearestAtomDist)
-                     {
-                        nearestAtomDist = distSq;
-                        nearestAtom = r;
-                     }
-                  }
+                  pt.x = p->x + (d*pq.x);
+                  pt.y = p->y + (d*pq.y);
+                  pt.z = p->z + (d*pq.z);
                   
-                  /* We have found a point along this line which is a void
-                     point. Reassign the current grid point from protein
-                     to void and return.
-                  */
-                  if(isVoid)
+                  /* If this point is within the current voxel          */
+/*
+//                  if((pt.x >= (grid->xmin + 
+//                               (((REAL)xi-0.5) * grid->gridStep))) &&
+//                     (pt.x <  (grid->xmin + 
+//                               (((REAL)xi+0.5) * grid->gridStep))) &&
+//                     (pt.y >= (grid->ymin + 
+//                               (((REAL)yi-0.5) * grid->gridStep))) &&
+//                     (pt.y <  (grid->ymin + 
+//                               (((REAL)yi+0.5) * grid->gridStep))) &&
+//                     (pt.z >= (grid->zmin + 
+//                               (((REAL)zi-0.5) * grid->gridStep))) &&
+//                     (pt.z <  (grid->zmin + 
+//                               (((REAL)zi+0.5) * grid->gridStep))))
+*/
                   {
-                     grid->grid[xi][yi][zi] = TYPE_VOID;
+                     /* Check the distances to all neighbouring atoms. 
+                        Assume that if all atoms are sufficiently distant
+                        that there is actually a void point along this 
+                        vector, once that is shown not to be true, set 
+                        isVoid to FALSE and break out of the loop
+                     */
+                     isVoid = TRUE;
+                     nearestAtomDist = 100000.0;
+                     for(k=0; k<numNeighbours; k++)
+                     {
+                        r = neighbours[k];
+                        minDistSq = (r->occ + ps) * (r->occ + ps);
+                        distSq = DISTSQ(r, &pt);
+                        if(distSq < minDistSq)
+                        {
+                           isVoid = FALSE;
+                           break;
+                        }
+                        if(distSq < nearestAtomDist)
+                        {
+                           nearestAtomDist = distSq;
+                           nearestAtom = r;
+                        }
+                     }
+                     
+                     /* We have found a point along this line which is a 
+                        void point. Reassign the current grid point from 
+                        protein to void and return.
+                     */
+                     if(isVoid)
+                     {
+/*  This gives worse results than just changing the current voxel
+//                        ChangeVoxel(grid, xi, yi, zi, pt);
+*/                      
+
+                      grid->grid[xi][yi][zi] = TYPE_VOID;
+
 #ifdef DEBUG
-                     fprintf(stderr,"\nAtoms %d and %d are separated by \
-%.1fA (required separation %.1fA)\n", 
-                             p->atnum, q->atnum, dist, sqrt(minDistSq));
-                     fprintf(stderr,"At point %8.3f%8.3f%8.3f\n",
-                             pt.x, pt.y, pt.z);
-                     fprintf(stderr, "Nearest atom distance was %f to \
+                        fprintf(stderr,"\nAtoms %d and %d are separated \
+by %.1fA (required separation %.1fA)\n", 
+                                p->atnum, q->atnum, dist, 
+                                sqrt(minDistSq));
+                        fprintf(stderr,"At point %8.3f%8.3f%8.3f\n",
+                                pt.x, pt.y, pt.z);
+                        fprintf(stderr, "Nearest atom distance was %f to \
 atom %d\n",
-                             sqrt((double)nearestAtomDist), 
-                             nearestAtom->atnum);
+                                sqrt((double)nearestAtomDist), 
+                                nearestAtom->atnum);
+                  fprintf(stdout, "ATOM  %5d  CA  GLY Z   \
+1    %8.3f%8.3f%8.3f  1.00 20.00\n",
+                          1, pt.x,pt.y,pt.z);
 #endif
-                     return;
+                        return; 
+                     }
                   }
                }
             }
@@ -3225,7 +3258,7 @@ int CombineNeighbours(GRID *grid, int xi, int yi, int zi,
                      */
                      for(n=0; 
                          (n < MAXNEIGHBOURS) && 
-                            (grid->neighbours[xi][yi][zi][n] != NULL);
+                            (grid->neighbours[i][j][k][n] != NULL);
                          n++)
                      {
                         /* See if this neighbour is already in our
@@ -3234,7 +3267,7 @@ int CombineNeighbours(GRID *grid, int xi, int yi, int zi,
                         found = FALSE;
                         for(m=0; m<numNeighbours; m++)
                         {
-                           if(grid->neighbours[xi][yi][zi][n] ==
+                           if(grid->neighbours[i][j][k][n] ==
                               neighbours[m])
                            {
                               found = TRUE;
@@ -3246,13 +3279,13 @@ int CombineNeighbours(GRID *grid, int xi, int yi, int zi,
                         {
                            if(numNeighbours >= MAXNEIGHBOURS)
                            {
-                              fprintf(stderr,"Warning: Maximum number of \
+                              fprintf(stderr,"Error!: Maximum number of \
 neighbours exceeded in combining neighbour lists.\n\
 Increase MAXNEIGHBOURS!\n");
-                              return(numNeighbours);
+                              exit(1);
                            }
                            neighbours[numNeighbours++] =
-                              grid->neighbours[xi][yi][zi][n];
+                              grid->neighbours[i][j][k][n];
                         }
                      }  /* Loop through neighbours                      */
                   }
@@ -3266,7 +3299,7 @@ Increase MAXNEIGHBOURS!\n");
 }
 
 
-#define NUMGRIDNEIGHBOURS2 1
+#define NUMGRIDNEIGHBOURS2 3
 BOOL NeighboursAreProtein(GRID *grid, int ix, int iy, int iz)
 {
    int i, j, k;
@@ -3309,4 +3342,48 @@ BOOL NeighboursAreProtein(GRID *grid, int ix, int iy, int iz)
    return(TRUE);
 }
 
+
+void ChangeVoxel(GRID *grid, int ix, int iy, int iz, VEC3F pt)
+{
+   int   i, j, k,
+         iNear = ix, 
+         jNear = iy, 
+         kNear = iz;
+   REAL  minDistSq = 1000,
+         distSq = 0.0;
+   VEC3F voxel;
+   
+   for(i=ix-1; i<=ix+1; i++)
+   {
+      if((i>=0) && (i<grid->ixmax))
+      {
+         for(j=iy-1; j<=iy+1; j++)
+         {
+            if((j>=0) && (j<grid->iymax))
+            {
+               for(k=iz-1; k<=iz+1; k++)
+               {
+                  if((k>=0) && (k<grid->izmax))
+                  {
+                     voxel.x = grid->xmin + ix*grid->gridStep;
+                     voxel.y = grid->ymin + iy*grid->gridStep;
+                     voxel.z = grid->zmin + iz*grid->gridStep;
+                     
+                     distSq = DISTSQ(&voxel, &pt);
+                     if(distSq < minDistSq)
+                     {
+                        minDistSq = distSq;
+                        iNear = i;
+                        jNear = j;
+                        kNear = k;
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   grid->grid[iNear][jNear][kNear] = TYPE_VOID;
+}
 

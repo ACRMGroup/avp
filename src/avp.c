@@ -300,7 +300,7 @@ void UpdateBoundaries(GRID *grid, REAL expandSize);
 BOOL BuildGrid(GRID *grid, REAL gridStep);
 void MarkVoidAndProteinPoints(PDB *pdb, GRID *grid, REAL probeSize);
 BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
-                       REAL solventMult, BOOL quiet);
+                       REAL solventMult, BOOL quiet, BOOL doNeighbours);
 int  AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
                        REAL solvSize, REAL xoff, REAL yoff, REAL zoff);
 void FlagBoxBoundsAsSolvent(GRID *grid, int ixmax, int iymax, int izmax,
@@ -344,10 +344,19 @@ void ReassignVoidPoints(GRID *grid, REAL probeSize);
 void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi, 
                          PDB **neighbours, int numNeighbours,
                          REAL probeSize);
-int CombineNeighbours(GRID *grid, int xi, int yi, int zi, 
-                      PDB **neighbours);
+int CombineAllNeighbours(GRID *grid, int xi, int yi, int zi, 
+                         PDB **neighbours);
 BOOL NeighboursAreProtein(GRID *grid, int ix, int iy, int iz);
 void ChangeVoxel(GRID *grid, int ix, int iy, int iz, VEC3F pt);
+BOOL ReassignSurfaceProteinVoxels(PDB *pdb, GRID *grid, REAL solvSize);
+BOOL CheckAndChangeNeighbours(PDB *pdb, GRID *grid, 
+                              int ix, int iy, int iz, 
+                              REAL solvSize,
+                              int doX, int doY, int doZ);
+int CombineTwoNeighbourLists(GRID *grid, int xi, int yi, int zi, 
+                             int i, int j, int k,
+                             PDB **neighbours);
+
 
 
 
@@ -432,7 +441,10 @@ VOIDS *FindVoids(FILE *out, PDB *pdb, REAL gridStep, REAL solvSize,
 {
    VOIDS *voids;
    GRID  grid;
-   int   nvoids;
+   int   nvoids,
+         solventCycle = 0;
+   BOOL  solventModified;
+   
 
    if(!gFlags.quiet)
    {
@@ -459,13 +471,31 @@ VOIDS *FindVoids(FILE *out, PDB *pdb, REAL gridStep, REAL solvSize,
    {
       fprintf(stderr,"Marking solvent points on grid\n");
    }
-   MarkSolventPoints(pdb, &grid, solvSize, SOLVENT_MULTIPLIER, FALSE);
+
+   MarkSolventPoints(pdb, &grid, solvSize, SOLVENT_MULTIPLIER, 
+                     FALSE, TRUE);
+   do
+   {
+      if(!gFlags.quiet)
+      {
+         fprintf(stderr,"Surface reassignment iteration %d\n", 
+                 ++solventCycle);
+      }
+      
+      solventModified = ReassignSurfaceProteinVoxels(pdb, &grid, 
+                                                     solvSize);
+      if(solventModified)
+      {
+         MarkSolventPoints(pdb, &grid, solvSize, SOLVENT_MULTIPLIER, 
+                           FALSE, FALSE);
+      }
+   }  while(solventModified);
 
    if(gFlags.reassignVoids)
    {
       if(!gFlags.quiet)
       {
-         fprintf(stderr,"Reassigning void point on grid\n");
+         fprintf(stderr,"\nReassigning void points on grid\n");
       }
       ReassignVoidPoints(&grid, probeSize);
    }
@@ -730,6 +760,7 @@ void MarkVoidAndProteinPoints(PDB *pdb, GRID *grid, REAL probeSize)
    10.10.01 Original    By: ACRM
    06.02.02 Added -w
    09.07.02 Added -R
+   17.07.02 Added -or
 */
 BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
                   REAL *gridStep, REAL *probeSize, REAL *solvSize,
@@ -1936,8 +1967,8 @@ int CompareCoords(const void *p1, const void *p2)
 #ifdef FLOOD_FILL_SOLVENT
 /************************************************************************/
 /*>BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
-                          REAL solventMult, BOOL quiet)
-   --------------------------------------------------------------
+                          REAL solventMult, BOOL quiet, BOOL doNeighbours)
+   -----------------------------------------------------------------------
    Input:     
    Output:    
    Returns:   
@@ -1949,7 +1980,7 @@ int CompareCoords(const void *p1, const void *p2)
    17.10.01 Original   By: ACRM
 */
 BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep, 
-                       REAL solventMult, BOOL quiet)
+                       REAL solventMult, BOOL quiet, BOOL doNeighbours)
 {
    int numberOfSolvatedNeighbours;
    REAL solvRadiusSq = solventMult * solventStep * 
@@ -1960,7 +1991,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
 
    /* Flood fill the solvent starting from point 0,0,0                  */
    FloodFillSolvent(grid, pdb, 0, 0, 0, solventStep, solvRadiusSq,
-                    numberOfSolvatedNeighbours);
+                    (doNeighbours?numberOfSolvatedNeighbours:0));
    return(TRUE);
 }
 
@@ -2205,8 +2236,8 @@ int AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
 
 /************************************************************************/
 /*>BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
-                          REAL solventMult, BOOL quiet)
-   --------------------------------------------------------------
+                          REAL solventMult, BOOL quiet, BOOL doNeighbours)
+   -----------------------------------------------------------------------
    Input:     
    Output:    
    Returns:   
@@ -2221,11 +2252,15 @@ int AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
 
    17.10.01 Original   By: ACRM
    18.06.02 Handles SOLVENT_MARGIN points
+   17.07.02 Returns a flag to indicate whether any solvent points were
+            modified
+            Added doNeighbours parameter
 */
 BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep, 
-                       REAL solventMult, BOOL quiet)
+                       REAL solventMult, BOOL quiet, BOOL doNeighbours)
 {
-   BOOL modified = TRUE;
+   BOOL modified = TRUE,
+        doneSomething = FALSE;
    int  ix, iy, iz, iteration = 1,solvState;
    int  numberOfSolvatedNeighbours;
    REAL solvRadiusSq = solventMult * solventStep * 
@@ -2237,7 +2272,9 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
    
    
    numberOfSolvatedNeighbours = 
-      (int)(solventMult * solventStep / grid->gridStep);
+      ((doNeighbours)?
+       (int)(solventMult * solventStep / grid->gridStep):
+       0);
    
    /* Assume all points on the surface of the box are solvent           */
    FlagBoxBoundsAsSolvent(grid, grid->ixmax, grid->iymax, grid->izmax,
@@ -2280,6 +2317,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                     doneSomething = TRUE;
                   }
                   else if(solvState == SOLVENT_MARGIN)
                   {
@@ -2301,6 +2339,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                            solvRadiusSq,
                                            TYPE_SOLVENT);
                               modified = TRUE;
+                              doneSomething = TRUE;
                            }
                         }
                      }
@@ -2323,6 +2362,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                     doneSomething = TRUE;
                   }
                   else if(solvState == SOLVENT_MARGIN)
                   {
@@ -2344,6 +2384,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                            solvRadiusSq,
                                            TYPE_SOLVENT);
                               modified = TRUE;
+                              doneSomething = TRUE;
                            }
                         }
                      }
@@ -2370,6 +2411,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                     doneSomething = TRUE;
                   }
                   else if(solvState == SOLVENT_MARGIN)
                   {
@@ -2391,6 +2433,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                            solvRadiusSq,
                                            TYPE_SOLVENT);
                               modified = TRUE;
+                              doneSomething = TRUE;
                            }
                         }
                      }
@@ -2413,6 +2456,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                     doneSomething = TRUE;
                   }
                   else if(solvState == SOLVENT_MARGIN)
                   {
@@ -2434,6 +2478,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                            solvRadiusSq,
                                            TYPE_SOLVENT);
                               modified = TRUE;
+                              doneSomething = TRUE;
                            }
                         }
                      }
@@ -2463,6 +2508,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                     doneSomething = TRUE;
                   }
                   else if(solvState == SOLVENT_MARGIN)
                   {
@@ -2484,6 +2530,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                            solvRadiusSq,
                                            TYPE_SOLVENT);
                               modified = TRUE;
+                              doneSomething = TRUE;
                            }
                         }
                      }
@@ -2506,6 +2553,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                   solvRadiusSq,
                                   TYPE_SOLVENT);
                      modified = TRUE;
+                     doneSomething = TRUE;
                   }
                   else if(solvState == SOLVENT_MARGIN)
                   {
@@ -2527,6 +2575,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                                            solvRadiusSq,
                                            TYPE_SOLVENT);
                               modified = TRUE;
+                              doneSomething = TRUE;
                            }
                         }
                      }
@@ -2537,7 +2586,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
       }
    }  /* End iterations                                                 */
 
-   return(TRUE);
+   return(doneSomething);
 }
 
 #endif
@@ -3053,8 +3102,8 @@ void ReassignVoidPoints(GRID *grid, REAL probeSize)
                   /* Create a combined list of all the atoms neighbouring 
                      this protein point and all adjacent protein points
                   */
-                  numNeighbours = CombineNeighbours(grid, xi, yi, zi, 
-                                                    neighbours);
+                  numNeighbours = CombineAllNeighbours(grid, xi, yi, zi, 
+                                                       neighbours);
                   doReassignVoidPoint(grid, xi, yi, zi, neighbours,
                                       numNeighbours, probeSize);
                }
@@ -3234,8 +3283,8 @@ atom %d\n",
 
 
 /************************************************************************/
-int CombineNeighbours(GRID *grid, int xi, int yi, int zi, 
-                      PDB **neighbours)
+int CombineAllNeighbours(GRID *grid, int xi, int yi, int zi, 
+                         PDB **neighbours)
 {
    int  numNeighbours = 0,
         i, j, k, m, n;
@@ -3387,3 +3436,324 @@ void ChangeVoxel(GRID *grid, int ix, int iy, int iz, VEC3F pt)
    grid->grid[iNear][jNear][kNear] = TYPE_VOID;
 }
 
+
+
+/************************************************************************/
+BOOL ReassignSurfaceProteinVoxels(PDB *pdb, GRID *grid, REAL solvSize)
+{
+   BOOL modified = FALSE;
+   int  ix, iy, iz;
+   
+   
+   /* Walk across the grid from each of the six sides                   */
+   for(ix=0; ix<grid->ixmax; ix++)
+   {
+      for(iy=0; iy<grid->iymax; iy++)
+      {
+         /* Forwards...                                                 */
+         for(iz=1; iz<grid->izmax; iz++)
+         {
+            /* If this is a protein point                               */
+            if(grid->grid[ix][iy][iz] == TYPE_PROTEIN)
+            {
+               /* If previous point was solvent                         */
+               if((grid->grid[ix][iy][iz-1] == TYPE_SOLVENT) ||
+                  (grid->grid[ix][iy][iz-1] == TYPE_SOLVENT2))
+               {
+                  if(CheckAndChangeNeighbours(pdb, grid, 
+                                              ix, iy, iz, 
+                                              solvSize,
+                                              1, 1, 0))
+                  {
+                     modified = TRUE;
+                  }
+               }
+               break;
+            }
+         }
+         /* Backwards...                                                */
+         for(iz=grid->izmax-2; iz>=0; iz--)
+         {
+            /* If this is a protein point                               */
+            if(grid->grid[ix][iy][iz] == TYPE_PROTEIN)
+            {
+               /* If previous point was solvent                         */
+               if((grid->grid[ix][iy][iz+1] == TYPE_SOLVENT) ||
+                  (grid->grid[ix][iy][iz+1] == TYPE_SOLVENT2))
+               {
+                  if(CheckAndChangeNeighbours(pdb, grid, 
+                                              ix, iy, iz, 
+                                              solvSize,
+                                              1, 1, 0))
+                  {
+                     modified = TRUE;
+                  }
+               }
+               break;
+            }
+         }
+      }
+      
+      for(iz=0; iz<grid->izmax; iz++)
+      {
+         /* Up...                                                       */
+         for(iy=1; iy<grid->iymax; iy++)
+         {
+            /* If this is a protein point                               */
+            if(grid->grid[ix][iy][iz] == TYPE_PROTEIN)
+            {
+               /* If previous point was solvent                         */
+               if((grid->grid[ix][iy-1][iz] == TYPE_SOLVENT) ||
+                  (grid->grid[ix][iy-1][iz] == TYPE_SOLVENT2))
+               {
+                  if(CheckAndChangeNeighbours(pdb, grid, 
+                                              ix, iy, iz, 
+                                              solvSize,
+                                              1, 0, 1))
+                  {
+                     modified = TRUE;
+                  }
+               }
+               break;
+            }
+         }
+         
+         /* Down...                                                     */
+         for(iy=grid->iymax-2; iy>=0; iy--)
+         {
+            /* If this is a protein point                               */
+            if(grid->grid[ix][iy][iz] == TYPE_PROTEIN)
+            {
+               /* If previous point was solvent                         */
+               if((grid->grid[ix][iy+1][iz] == TYPE_SOLVENT) ||
+                  (grid->grid[ix][iy+1][iz] == TYPE_SOLVENT2))
+               {
+                  if(CheckAndChangeNeighbours(pdb, grid, 
+                                              ix, iy, iz, 
+                                              solvSize,
+                                              1, 0, 1))
+                  {
+                     modified = TRUE;
+                  }
+               }
+               break;
+            }
+         }
+      }
+   }
+
+   for(iy=0; iy<grid->iymax; iy++)
+   {
+      for(iz=0; iz<grid->izmax; iz++)
+      {
+         /* Across...                                                   */
+         for(ix=1; ix<grid->ixmax; ix++)
+         {
+            /* If this is a protein point                               */
+            if(grid->grid[ix][iy][iz] == TYPE_PROTEIN)
+            {
+               /* If previous point was solvent                         */
+               if((grid->grid[ix-1][iy][iz] == TYPE_SOLVENT) ||
+                  (grid->grid[ix-1][iy][iz] == TYPE_SOLVENT2))
+               {
+                  if(CheckAndChangeNeighbours(pdb, grid, 
+                                              ix, iy, iz, 
+                                              solvSize,
+                                              0, 1, 1))
+                  {
+                     modified = TRUE;
+                  }
+               }
+               break;
+            }
+         }
+         /* Backwards...                                                */
+         for(ix=grid->ixmax-2; ix>=0; ix--)
+         {
+            /* If this is a protein point                               */
+            if(grid->grid[ix][iy][iz] == TYPE_PROTEIN)
+            {
+               /* If previous point was solvent                         */
+               if((grid->grid[ix+1][iy][iz] == TYPE_SOLVENT) ||
+                  (grid->grid[ix+1][iy][iz] == TYPE_SOLVENT2))
+               {
+                  if(CheckAndChangeNeighbours(pdb, grid, 
+                                              ix, iy, iz, 
+                                              solvSize,
+                                              0, 1, 1))
+                  {
+                     modified = TRUE;
+                  }
+               }
+               break;
+            }
+         }
+      }
+   }
+   
+   return(modified);
+}
+
+BOOL CheckAndChangeNeighbours(PDB *pdb, GRID *grid, 
+                              int ix, int iy, int iz, 
+                              REAL solvSize,
+                              int doX, int doY, int doZ)
+{
+   int   i, j, k, n,
+         numNeighbours;
+   PDB   *neighbours[MAXNEIGHBOURS],
+         *r;
+   VEC3F centre,
+         neighb,
+         vec,
+         pt;
+   REAL  len, d, minDistSq = 0.0, distSq;
+   BOOL  isVoid;
+
+   doX = doY = doZ = 1;
+
+   centre.x = grid->xmin + (ix * grid->gridStep);
+   centre.y = grid->ymin + (iy * grid->gridStep);
+   centre.z = grid->zmin + (iz * grid->gridStep);
+   
+   for(i=ix-doX; i<=ix+doX; i++)
+   {
+      for(j=iy-doY; j<=iy+doY; j++)
+      {
+         for(k=iz-doZ; k<=iz+doZ; k++)
+         {
+            /* If this is not our central voxel                         */
+            if((i!=ix) || (j!=iy) || (k!=iz))
+            {
+               /* If it is also a protein voxel                         */
+               if(grid->grid[i][j][k] == TYPE_PROTEIN)
+               {
+                  /* Build a list of neighbours to both voxels          */
+                  numNeighbours = CombineTwoNeighbourLists(grid,
+                                                           ix, iy, iz,
+                                                           i, j, k,
+                                                           neighbours);
+
+                  /* Describe the vector between the two voxel centres  */
+                  neighb.x = grid->xmin + (i * grid->gridStep);
+                  neighb.y = grid->ymin + (j * grid->gridStep);
+                  neighb.z = grid->zmin + (k * grid->gridStep);
+                  
+                  len = DIST(&centre, &neighb);
+                  
+                  /* Define the unit vector                             */
+                  vec.x = (neighb.x - centre.x) / len;
+                  vec.y = (neighb.y - centre.y) / len;
+                  vec.z = (neighb.z - centre.z) / len;
+
+                  /* Now walk from the centre of one voxel to the centre 
+                     of the other and see if there are any points where 
+                     a water can fit
+                  */
+                  for(d=0; d<len; d+=0.05)
+                  {
+                     pt.x = centre.x + (d*vec.x);
+                     pt.y = centre.y + (d*vec.y);
+                     pt.z = centre.z + (d*vec.z);
+
+                     /* Check the distances to all neighbouring atoms. 
+                        Assume that if all atoms are sufficiently distant
+                        that there is actually a void point along this 
+                        vector, once that is shown not to be true, set 
+                        isVoid to FALSE and break out of the loop
+                     */
+                     isVoid = TRUE;
+                     for(n=0; n<numNeighbours; n++)
+                     {
+                        r = neighbours[n];
+                        minDistSq = (r->occ + solvSize) * 
+                                    (r->occ + solvSize);
+                        distSq = DISTSQ(r, &pt);
+                        if(distSq < minDistSq)
+                        {
+                           isVoid = FALSE;
+                           break;
+                        }
+                     }
+                     
+                     /* We have found a point along this line which is a 
+                        void point. Reassign the two grids point from 
+                        protein to solvent and return.
+                     */
+                     if(isVoid)
+                     {
+                        grid->grid[ix][iy][iz] = TYPE_SOLVENT;
+                        grid->grid[i][j][k]    = TYPE_SOLVENT;
+                        return(TRUE);
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+   return(FALSE);
+}
+
+
+/************************************************************************/
+int CombineTwoNeighbourLists(GRID *grid, int xi, int yi, int zi, 
+                             int i, int j, int k,
+                             PDB **neighbours)
+{
+   int  numNeighbours = 0,
+        m, n;
+   BOOL found;
+
+   /* Copy the neighbours from the first point into our new list        */
+   for(n=0; 
+       (n < MAXNEIGHBOURS) && 
+          (grid->neighbours[xi][yi][zi][n] != NULL);
+       n++)
+   {
+      if(numNeighbours >= MAXNEIGHBOURS)
+      {
+         fprintf(stderr,"Error!: Maximum number of \
+neighbours exceeded in combining neighbour lists.\n\
+Increase MAXNEIGHBOURS!\n");
+         exit(1);
+      }
+      neighbours[numNeighbours++] = grid->neighbours[xi][yi][zi][n];
+   }
+   
+   /* Now step through the neighbours list for the second grid point    */
+   for(n=0; 
+       (n < MAXNEIGHBOURS) && 
+          (grid->neighbours[i][j][k][n] != NULL);
+       n++)
+   {
+      /* See if this neighbour is already in our
+         combined list
+      */
+      found = FALSE;
+      for(m=0; m<numNeighbours; m++)
+      {
+         if(grid->neighbours[i][j][k][n] ==
+            neighbours[m])
+         {
+            found = TRUE;
+            break;
+         }
+      }
+      /* If not in the combined list, add it          */
+      if(!found)
+      {
+         if(numNeighbours >= MAXNEIGHBOURS)
+         {
+            fprintf(stderr,"Error!: Maximum number of \
+neighbours exceeded in combining neighbour lists.\n\
+Increase MAXNEIGHBOURS!\n");
+            exit(1);
+         }
+         neighbours[numNeighbours++] =
+            grid->neighbours[i][j][k][n];
+      }
+   }  /* Loop through neighbours                      */
+
+   return(numNeighbours);
+}

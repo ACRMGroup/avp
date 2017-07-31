@@ -1,4 +1,4 @@
-#define DEBUG 1
+/* #define DEBUG 1 */
 /*************************************************************************
 
    Program:    avp (Another Void Program)
@@ -180,12 +180,12 @@
                                      neighbous                          */
 #define WATER_RADIUS 1.4          /* Radius of a standard water         */
 
-#define TYPE_VOID     (0)         /* Grid point types                   */
-#define TYPE_PROTEIN  (1)
-#define TYPE_PROTEIN2 (2)
-#define TYPE_SOLVENT  (3)
-#define TYPE_SOLVENT2 (4)
-#define TYPE_ASSIGNED (32767)
+#define TYPE_VOID     (1)         /* Grid point types                   */
+#define TYPE_PROTEIN  (2)
+#define TYPE_PROTEIN2 (4)
+#define TYPE_SOLVENT  (8)
+#define TYPE_SOLVENT2 (16)
+#define TYPE_ASSIGNED (32768)
 
 #define DEFAULT_GRID_SIZE  1.0    /* Default sizes                      */
 #define DEFAULT_PROBE_SIZE 0.00
@@ -207,13 +207,7 @@
                                     void                                */
 
 /* Test if an atom is a water                                           */
-#define ISWATER(x)  (!strncmp((x)->resnam,"HOH",3) ||                   \
-                     !strncmp((x)->resnam,"OH2",3) ||                   \
-                     !strncmp((x)->resnam,"OHH",3) ||                   \
-                     !strncmp((x)->resnam,"DOD",3) ||                   \
-                     !strncmp((x)->resnam,"OD2",3) ||                   \
-                     !strncmp((x)->resnam,"ODD",3) ||                   \
-                     !strncmp((x)->resnam,"WAT",3))
+#define SETLOWBYTE(x, y)    (x) = ((x)&0xFF00)|(y)
 
 /************************************************************************/
 typedef struct _pointlist
@@ -275,6 +269,7 @@ typedef struct
    BOOL leak;
    BOOL quiet;
    BOOL reassignVoids;
+   BOOL reassignSurface;
 }  FLAGS;
 
 
@@ -474,23 +469,26 @@ VOIDS *FindVoids(FILE *out, PDB *pdb, REAL gridStep, REAL solvSize,
 
    MarkSolventPoints(pdb, &grid, solvSize, SOLVENT_MULTIPLIER, 
                      FALSE, TRUE);
-   do
+   if(gFlags.reassignSurface)
    {
-      if(!gFlags.quiet)
+      do
       {
-         fprintf(stderr,"Surface reassignment iteration %d\n", 
-                 ++solventCycle);
-      }
-      
-      solventModified = ReassignSurfaceProteinVoxels(pdb, &grid, 
-                                                     solvSize);
-      if(solventModified)
-      {
-         MarkSolventPoints(pdb, &grid, solvSize, SOLVENT_MULTIPLIER, 
-                           FALSE, FALSE);
-      }
-   }  while(solventModified);
-
+         if(!gFlags.quiet)
+         {
+            fprintf(stderr,"Surface reassignment iteration %d\n", 
+                    ++solventCycle);
+         }
+         
+         solventModified = ReassignSurfaceProteinVoxels(pdb, &grid, 
+                                                        solvSize);
+         if(solventModified)
+         {
+            MarkSolventPoints(pdb, &grid, solvSize, SOLVENT_MULTIPLIER, 
+                              FALSE, FALSE);
+         }
+      }  while(solventModified);
+   }
+   
    if(gFlags.reassignVoids)
    {
       if(!gFlags.quiet)
@@ -761,6 +759,7 @@ void MarkVoidAndProteinPoints(PDB *pdb, GRID *grid, REAL probeSize)
    06.02.02 Added -w
    09.07.02 Added -R
    17.07.02 Added -or
+   20.09.02 Added -S
 */
 BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
                   REAL *gridStep, REAL *probeSize, REAL *solvSize,
@@ -781,6 +780,7 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    gFlags.leak                 = FALSE;
    gFlags.quiet                = FALSE;
    gFlags.reassignVoids        = FALSE;
+   gFlags.reassignSurface      = FALSE;
    
    *gridStep                   = DEFAULT_GRID_SIZE;
    *probeSize                  = DEFAULT_PROBE_SIZE;
@@ -920,6 +920,9 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
                }
             }
             break;
+         case 'S':
+            gFlags.reassignSurface = TRUE;
+            break;
          case 'w':
             gFlags.printWaterNeighbours = TRUE;
             break;
@@ -979,7 +982,7 @@ void SetAsSolvent(GRID *grid, int ix, int iy, int iz,
    yi = iy * grid->gridStep;
    zi = iz * grid->gridStep;
    
-   grid->grid[ix][iy][iz] = TYPE_SOLVENT;
+   SETLOWBYTE(grid->grid[ix][iy][iz], TYPE_SOLVENT);
 
    /* Mark other points within the solvent sphere                       */
    for(jx=ix-numberOfSolvatedNeighbours;
@@ -1011,9 +1014,9 @@ void SetAsSolvent(GRID *grid, int ix, int iy, int iz,
                         ((zj-zi) * (zj-zi))
                         <= solvRadiusSq)
                      {
-                        if(grid->grid[jx][jy][jz] == TYPE_VOID)
+                        if(ISSET(grid->grid[jx][jy][jz], TYPE_VOID))
                         {
-                           grid->grid[jx][jy][jz] = TYPE_SOLVENT2;
+                           SETLOWBYTE(grid->grid[jx][jy][jz], TYPE_SOLVENT2);
                         }
                      }
                   }
@@ -1489,7 +1492,7 @@ University of Reading\n");
 [-s solventsize]\n");
    fprintf(stderr,"           [-r] [-e] [-c] [-o[a][s] file] \n");
    fprintf(stderr,"           [-f file] [-l] [-n file] [-O(xyz) value] \
-[-w] [file.pdb [file.out]]\n");
+[-w] [-S] [file.pdb [file.out]]\n");
 
    fprintf(stderr,"   -q Quiet - do not report progress\n");
    fprintf(stderr,"   -g Specify the grid spacing (Default: %f)\n",
@@ -1515,6 +1518,8 @@ in volume refinement\n");
 void to file.\n");
    fprintf(stderr,"   -Ox -Oy -Oz Specify an offset for the grid\n");
    fprintf(stderr,"   -w Print a list of waters that neighbour voids\n");
+   fprintf(stderr,"   -S Reassign surface protein to solvent if can \
+fit a solvent near\n");
 
    fprintf(stderr,"\navp (Another Void Program) is a program to \
 calculate void volumes in\n");
@@ -3080,6 +3085,11 @@ BOOL IsSolvent(GRID *grid, int ix, int iy, int iz)
 
 
 /************************************************************************/
+/*>void ReassignVoidPoints(GRID *grid, REAL probeSize)
+   ---------------------------------------------------
+   Checks all protein voxels to see if they contain a void that isn't 
+   found by placing the test probe at the centre of the voxel
+*/
 void ReassignVoidPoints(GRID *grid, REAL probeSize)
 {
    REAL x,  y,  z;
@@ -3137,9 +3147,7 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
          corner1,
          corner2;
    BOOL  isVoid;
-#ifdef DEBUG
    PDB   *nearestAtom = NULL;
-#endif
    
    /* Enforce a minimum probe size of 0.1A - otherwise virtually every 
       protein point will get converted back to void
@@ -3439,6 +3447,15 @@ void ChangeVoxel(GRID *grid, int ix, int iy, int iz, VEC3F pt)
 
 
 /************************************************************************/
+/*>BOOL ReassignSurfaceProteinVoxels(PDB *pdb, GRID *grid, REAL solvSize)
+   ----------------------------------------------------------------------
+
+   Looks at surface protein voxels and reassigns them to solvent if
+   a solvent molecule can be placed at any point along the vector
+   between the centre of this voxel and the centre of an adjacent
+   voxel in the same plane perpendicular to the direction of the
+   walk.
+*/
 BOOL ReassignSurfaceProteinVoxels(PDB *pdb, GRID *grid, REAL solvSize)
 {
    BOOL modified = FALSE;

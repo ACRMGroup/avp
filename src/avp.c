@@ -4,11 +4,11 @@
    Program:    avp (Another Void Program)
    File:       avp.c
    
-   Version:    V1.3
-   Date:       02.07.02
+   Version:    V1.4
+   Date:       31.07.17
    Function:   Find voids in proteins
    
-   Copyright:  (c) University of Reading / Dr. Andrew C. R. Martin 2001-02
+   Copyright:  (c) University of Reading / Dr. Andrew C. R. Martin 2001-17
    Author:     Dr. Andrew C. R. Martin
    Address:    School of Animal and Microbial Sciences,
                The University of Reading,
@@ -16,8 +16,6 @@
                P.O. Box 228,
                Reading RG6 6AJ.
                England.
-   Phone:      +44 (0)118 987 5123 Extn. 7022
-   Fax:        +44 (0)118 931 0180
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -44,7 +42,7 @@
    main()
    {
       ParseCmdLine()
-      OpenStdFiles()
+      blOpenStdFiles()
       ReadPDB()
       SetRadii()
       [Usage()]
@@ -138,15 +136,18 @@
 
    Revision History:
    =================
-   V1.0 31.10.01 Original
-   V1.1 18.06.02 Fixed bug in refining void size
-                 Added marginal water refinement
-                 By default, when refining voxels, look at corner and 
-                 edge connections as well as planar connections
-   V1.2 02.07.02 Uses constructed neighbour lists in finding solvent as
-                 well as in void refinement to speed things up
-                 considerably!
-                 Differentiates between surface and buried voids
+   V1.0  31.10.01 Original
+   V1.1  18.06.02 Fixed bug in refining void size
+                  Added marginal water refinement
+                  By default, when refining voxels, look at corner and 
+                  edge connections as well as planar connections
+   V1.2  02.07.02 Uses constructed neighbour lists in finding solvent as
+                  well as in void refinement to speed things up
+                  considerably!
+                  Differentiates between surface and buried voids
+   V1.2a xx.07.02 Added solvent point reassignment
+   V1.3  18.08.08 Added OPENMP code
+   V1.4  31.07.17 Cleanup for new biolip
 
 *************************************************************************/
 /* Program options
@@ -385,9 +386,9 @@ int main(int argc, char **argv)
    if(ParseCmdLine(argc, argv, infile, outfile, &gridStep, &probeSize,
                    &solvSize, &doRefine))
    {
-      if(OpenStdFiles(infile, outfile, &in, &out))
+      if(blOpenStdFiles(infile, outfile, &in, &out))
       {
-         if((pdb=ReadPDB(in, &natoms)))
+         if((pdb=blReadPDB(in, &natoms)))
          {
             SetRadii(pdb);
             voidlist = FindVoids(out, pdb, gridStep, solvSize, probeSize,
@@ -1681,7 +1682,7 @@ midpoint: %8.3f%8.3f%8.3f %s\n",
             if(p->nearest->occ < 0.01)
             {
                p->nearest->occ = (REAL)1.0;
-               WritePDBRecord(gFlags.neighbourFile, p->nearest);
+               blWritePDBRecord(gFlags.neighbourFile, p->nearest);
             }
          }
       }
@@ -1750,7 +1751,7 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
    if((pdbArray==NULL) && (pdb != NULL))
    {
       /* Malloc and populate pdbArray[] with PDB pointers               */
-      if((pdbArray = IndexPDB(pdb, &natoms)) == NULL)
+      if((pdbArray = blIndexPDB(pdb, &natoms)) == NULL)
       {
          fprintf(stderr,"No memory for PDB index array\n");
          exit(1);
@@ -3196,15 +3197,17 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
          distSq,
          dist,
          d,
-         ps,
-         nearestAtomDist;
+         ps;
    VEC3F pq,
          pt,
          pV,
          corner1,
          corner2;
    BOOL  isVoid;
+#ifdef DEBUG
+   REAL  nearestAtomDist;
    PDB   *nearestAtom = NULL;
+#endif
    
    /* Enforce a minimum probe size of 0.1A - otherwise virtually every 
       protein point will get converted back to void
@@ -3289,7 +3292,9 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
                         isVoid to FALSE and break out of the loop
                      */
                      isVoid = TRUE;
+#ifdef DEBUG
                      nearestAtomDist = 100000.0;
+#endif
                      for(k=0; k<numNeighbours; k++)
                      {
                         r = neighbours[k];
@@ -3300,11 +3305,13 @@ void doReassignVoidPoint(GRID *grid, int xi, int yi, int zi,
                            isVoid = FALSE;
                            break;
                         }
+#ifdef DEBUG
                         if(distSq < nearestAtomDist)
                         {
                            nearestAtomDist = distSq;
                            nearestAtom = r;
                         }
+#endif
                      }
                      
                      /* We have found a point along this line which is a 

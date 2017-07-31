@@ -2,7 +2,7 @@ CC    = cc
 # To allow decompression of gzipped PDB files on the fly, uncomment
 # this line
 # GUNZIP = -DGUNZIP_SUPPORT
-COPT = -O2 -Wall -ansi -pedantic -I./include $(GUNZIP)
+COPT = -O2 -Wall -ansi -pedantic -I./include $(GUNZIP) -Wno-unknown-pragmas -Wno-unused-function
 OFILES = avp.o RayBox.o
 IFILES = raybox.h
 
@@ -13,10 +13,14 @@ bioplib/OpenStdFiles.o \
 bioplib/FindNextResidue.o \
 bioplib/IndexPDB.o \
 bioplib/chindex.o \
+bioplib/StoreString.o \
+bioplib/FreeStringList.o \
+bioplib/FindResidue.o \
+bioplib/BuildConect.o \
 bioplib/padterm.o 
 
 avp : $(OFILES) $(LFILES)
-	$(CC) -o $@ $(OFILES) $(LFILES) -lm
+	$(CC) -o $@ $(OFILES) $(LFILES) -lm -lxml2
 
 .c.o : $(IFILES)
 	$(CC) $(COPT) -o $@ -c $<

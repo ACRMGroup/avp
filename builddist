@@ -5,7 +5,7 @@
 # 17.07.97  Builds a binary distribution as well
 
 BIOP=$HOME/bioplib/src/
-PACKAGE=AVP1.3
+PACKAGE=AVP1.4
 SRC=$PACKAGE/src
 DOC=$PACKAGE/doc
 PBIOP=$SRC/bioplib
@@ -62,7 +62,13 @@ cp  ${BIOP}/OpenStdFiles.c      $PBIOP
 cp  ${BIOP}/IndexPDB.c          $PBIOP
 cp  ${BIOP}/chindex.c           $PBIOP
 cp  ${BIOP}/padterm.c           $PBIOP
+cp  ${BIOP}/StoreString.c       $PBIOP
+cp  ${BIOP}/FreeStringList.c    $PBIOP
+cp  ${BIOP}/FindResidue.c       $PBIOP
+cp  ${BIOP}/BuildConect.c       $PBIOP
 
+cp  ${BIOP}deprecated.h         $PBIOP
+cp  ${BIOP}hash.h               $PBIOP
 cp  ${BIOP}MathType.h           $PBIOP
 cp  ${BIOP}SysDefs.h            $PBIOP
 cp  ${BIOP}fsscanf.h            $PBIOP

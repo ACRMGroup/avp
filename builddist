@@ -4,7 +4,7 @@
 # 18.07.95  Original   By: ACRM
 # 17.07.97  Builds a binary distribution as well
 
-BIOP=/home/bsm/martin/bioplib/src/
+BIOP=$HOME/bioplib/src/
 PACKAGE=AVP1.3
 SRC=$PACKAGE/src
 DOC=$PACKAGE/doc

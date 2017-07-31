@@ -4,7 +4,7 @@
    Program:    avp (Another Void Program)
    File:       avp.c
    
-   Version:    V1.2
+   Version:    V1.3
    Date:       02.07.02
    Function:   Find voids in proteins
    
@@ -206,7 +206,6 @@
                                     to test to see if this is a surface
                                     void                                */
 
-/* Test if an atom is a water                                           */
 #define SETLOWBYTE(x, y)    (x) = ((x)&0xFF00)|(y)
 
 /************************************************************************/
@@ -713,16 +712,35 @@ BOOL BuildGrid(GRID *grid, REAL gridStep)
 void MarkVoidAndProteinPoints(PDB *pdb, GRID *grid, REAL probeSize)
 {
    REAL x,y,z;
-   int  xi = 0,
-        yi = 0,
-        zi = 0;
+   int  xi = 0;
+   int  xm, ym, zm;
 
-   for(x=grid->xmin, xi=0; x<=grid->xmax; x+=grid->gridStep, xi++)
+   xm = (int)((grid->xmax - grid->xmin)/grid->gridStep);
+   if((grid->xmin + (xm*grid->gridStep)) > grid->xmax)
+     xm--;
+
+   ym = (int)((grid->ymax - grid->ymin)/grid->gridStep);
+   if((grid->ymin + (ym*grid->gridStep)) > grid->ymax)
+     ym--;
+
+   zm = (int)((grid->zmax - grid->zmin)/grid->gridStep);
+   if((grid->zmin + (zm*grid->gridStep)) > grid->zmax)
+     zm--;
+
+#pragma omp parallel for private(x,y,z) schedule (dynamic)
+   for(xi=0; xi<=xm; xi++)
    {
-      for(y=grid->ymin, yi=0; y<=grid->ymax; y+=grid->gridStep, yi++)
+      int yi;
+      x=grid->xmin + xi*grid->gridStep;
+
+      for(yi=0; yi<=ym; yi++)
       {
-         for(z=grid->zmin, zi=0; z<=grid->zmax; z+=grid->gridStep, zi++)
+         int zi;
+	 y=grid->ymin + yi*grid->gridStep;
+
+         for(zi=0; zi<=zm; zi++)
          {
+   	    z=grid->zmin + zi*grid->gridStep;
             if(AtomNear(pdb, x, y, z, probeSize,
                         grid->neighbours[xi][yi][zi]))
             {
@@ -1307,7 +1325,39 @@ void FindNearestAtoms(PDB *pdb, VOIDS *voids)
 {
    VOIDS *v;
    POINTLIST *p;
-   
+
+#ifdef OMP
+   VOIDS **voidarray;
+   int   nvoids, i;
+
+   for(v=voids, nvoids=0; v!=NULL; NEXT(v))
+   {
+      nvoids++;
+   }
+   if((voidarray=(VOIDS **)malloc(nvoids*sizeof(VOIDS *)))==NULL)
+   {
+      fprintf(stderr,"Error!: No memory for voids array\n");
+      exit(1);
+   }
+   for(v=voids, i=0; v!=NULL; NEXT(v))
+   {
+      voidarray[i++] = v;
+   }
+
+#pragma omp parallel for private(v,p)
+   for(i=0; i<nvoids; i++)
+   {
+      v=voidarray[i];
+
+      for(p=v->pointlist; p!=NULL; NEXT(p))
+      {
+         PDB *tmp;
+         tmp = FindTheNearestAtom(pdb, p);
+#pragma omp critical
+         p->nearest = tmp;
+      }
+   }
+#else
    for(v=voids; v!=NULL; NEXT(v))
    {
       for(p=v->pointlist; p!=NULL; NEXT(p))
@@ -1315,6 +1365,7 @@ void FindNearestAtoms(PDB *pdb, VOIDS *voids)
          p->nearest = FindTheNearestAtom(pdb, p);
       }
    }
+#endif
 }
 
 
@@ -1706,6 +1757,7 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
       }
 
       /* Now sort the atoms on the basis of coordinates                 */
+#pragma omp critical
       qsort((void *)pdbArray, (size_t)natoms, sizeof(PDB *), 
             CompareCoords);
    }
@@ -1773,6 +1825,7 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
                /* Add to neighbour list if near enough                  */
                if(DISTSQ(pdbArray[i], &point) < cutoff2Sq)
                {
+#pragma omp critical
                   if(neighbCount < MAXNEIGHBOURS)
                   {
                      neighbours[neighbCount++] = pdbArray[i];
@@ -2084,6 +2137,7 @@ void FlagBoxBoundsAsSolvent(GRID *grid, int ixmax, int iymax, int izmax,
    int ix, iy, iz;
    BOOL warned = FALSE;
 
+#pragma omp parallel for private(iy,iz)
    for(ix=0; ix<ixmax; ix++)
    {
       for(iy=0; iy<iymax; iy++)
@@ -2128,6 +2182,7 @@ void FlagBoxBoundsAsSolvent(GRID *grid, int ixmax, int iymax, int izmax,
       }
    }
    
+#pragma omp parallel for private(iz)
    for(iy=0; iy<iymax; iy++)
    {
       for(iz=0; iz<izmax; iz++)
@@ -2302,6 +2357,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
       }
       
       modified = FALSE;
+#pragma omp parallel for private(iy,iz,xoff,yoff,zoff) schedule (dynamic)
       for(ix=0; ix<grid->ixmax; ix++)
       {
          for(iy=0; iy<grid->iymax; iy++)
@@ -2493,6 +2549,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
          }
       }
       
+#pragma omp parallel for private(ix,iz,xoff,yoff,zoff) schedule (dynamic)
       for(iy=0; iy<grid->iymax; iy++)
       {
          for(iz=0; iz<grid->izmax; iz++)

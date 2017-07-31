@@ -3,8 +3,8 @@
    Program:    avp (Another Void Program)
    File:       avp.c
    
-   Version:    V1.1
-   Date:       18.06.02
+   Version:    V1.2
+   Date:       02.07.02
    Function:   Find voids in proteins
    
    Copyright:  (c) University of Reading / Dr. Andrew C. R. Martin 2001-02
@@ -140,11 +140,18 @@
    V1.0 31.10.01 Original
    V1.1 18.06.02 Fixed bug in refining void size
                  Added marginal water refinement
+                 By default, when refining voxels, look at corner and 
+                 edge connections as well as planar connections
+   V1.2 02.07.02 Uses constructed neighbour lists in finding solvent as
+                 well as in void refinement to speed things up
+                 considerably!
 
 *************************************************************************/
 /* Program options
 */
 /* #define FLOOD_FILL_SOLVENT */ /* Flood fill the solvent              */
+/* #define NO_EXTRA_VOXEL_NEIGHBOURS */ /* Refine voxels only along planar
+                                           connections                  */
 
 /************************************************************************/
 /* Includes
@@ -192,6 +199,9 @@
 #define NSOLVFINESTEP       19    /* Number of fine steps to take in
                                      each direction when setting solvent
                                      point at the protein boundary      */
+#define NUMGRIDNEIGHBOURS   3    /* Number of neighbouring points on grid
+                                    to test to see if this is a surface
+                                    void                                */
 
 /* Test if an atom is a water                                           */
 #define ISWATER(x)  (!strncmp((x)->resnam,"HOH",3) ||                   \
@@ -227,6 +237,7 @@ typedef struct _voids
                  ix, ixmin, ixmax, 
                  iy, iymin, iymax, 
                  iz, izmin, izmax;
+   BOOL          surfaceVoid;
 }  VOIDS;
 
 typedef struct
@@ -324,6 +335,7 @@ int RefineAVoxelNeighbour(GRID *grid, PDB *pdb, POINTLIST *pt,
                           int xoff, int yoff, int zoff, 
                           REAL fineGridStep, REAL probeSize);
 void PrintWaterNeighbours(FILE *out, PDB *pdb, GRID *grid);
+BOOL IsSolvent(GRID *grid, int ix, int iy, int iz);
 
 
 /************************************************************************/
@@ -1019,6 +1031,7 @@ void PrintGrid(FILE *fp, GRID *grid, BOOL refined)
    turn
 
    17.10.01 Original   By: ACRM
+   02.07.02 Added initialization of surfaceVoid element of VOIDS
 */
 VOIDS *ClusterVoids(GRID *grid, int *nvoids)
 {
@@ -1056,6 +1069,7 @@ VOIDS *ClusterVoids(GRID *grid, int *nvoids)
                   v->ix = v->ixmin = v->ixmax = ix;
                   v->iy = v->iymin = v->iymax = iy;
                   v->iz = v->izmin = v->izmax = iz;
+                  v->surfaceVoid = FALSE;
                   
                   v->voxelCount = FloodFillVoid(grid, ix, iy, iz, 
                                                 v, ++voidset);
@@ -1097,90 +1111,117 @@ VOIDS *ClusterVoids(GRID *grid, int *nvoids)
    8 corner-connected voxels).
 
    17.10.01 Original   By: ACRM
+   02.07.02 Checks for solvent boundary and setting surfaceVoid flag
 */
 int FloodFillVoid(GRID *grid, int ix, int iy, int iz, VOIDS *v, 
                   int voidset)
 {
-   int voxelCount = 0;
+   int voxelCount = 0,
+       i, j, k;
    POINTLIST *p;
    
    if((ix>=0) && (ix<grid->ixmax) &&
       (iy>=0) && (iy<grid->iymax) &&
-      (iz>=0) && (iz<grid->izmax) &&
-      grid->grid[ix][iy][iz] == TYPE_VOID)
+      (iz>=0) && (iz<grid->izmax))
    {
-      /* Set this point as an assigned void                             */
-      grid->grid[ix][iy][iz] = voidset;
-      SET(grid->grid[ix][iy][iz], TYPE_ASSIGNED);
-      voxelCount++;
-
-      if(v->pointlist == NULL)
+      if(grid->grid[ix][iy][iz] == TYPE_VOID)
       {
-         INIT((v->pointlist), POINTLIST);
-         p=v->pointlist;
-      }
-      else
-      {
-         p=v->pointlist;
-         LAST(p);
-         ALLOCNEXT(p, POINTLIST);
-      }
-      if(p==NULL)
-      {
-         fprintf(stderr,"No memory for voids point list\n");
-         exit(1);
-      }
-      
-      /* Put this grid->grid point into the point list 
-      */
-      p->ix = ix;
-      p->iy = iy;
-      p->iz = iz;
-      p->x = (ix * grid->gridStep) + grid->xmin;
-      p->y = (iy * grid->gridStep) + grid->ymin;
-      p->z = (iz * grid->gridStep) + grid->zmin;
-      p->nearest = NULL;
-
-      if(ix < v->ixmin) v->ixmin = ix;
-      if(iy < v->iymin) v->iymin = iy;
-      if(iz < v->izmin) v->izmin = iz;
-      if(ix > v->ixmax) v->ixmax = ix;
-      if(iy > v->iymax) v->iymax = iy;
-      if(iz > v->izmax) v->izmax = iz;
-      
-      /* Recurse to neighbouring points                                 */
-      voxelCount += FloodFillVoid(grid,ix-1,iy,  iz,  v,voidset);
-      voxelCount += FloodFillVoid(grid,ix,  iy-1,iz,  v,voidset);
-      voxelCount += FloodFillVoid(grid,ix+1,iy,  iz,  v,voidset);
-      voxelCount += FloodFillVoid(grid,ix,  iy,  iz-1,v,voidset);
-      voxelCount += FloodFillVoid(grid,ix,  iy,  iz+1,v,voidset);
-      voxelCount += FloodFillVoid(grid,ix,  iy+1,iz,  v,voidset);
-      
-      if(gFlags.edgeConnected)
-      {
-         voxelCount += FloodFillVoid(grid,ix-1,iy-1,iz,  v,voidset);
-         voxelCount += FloodFillVoid(grid,ix-1,iy,  iz-1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix-1,iy,  iz+1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix-1,iy+1,iz,  v,voidset);
-         voxelCount += FloodFillVoid(grid,ix,  iy-1,iz-1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix,  iy-1,iz+1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix,  iy+1,iz-1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix,  iy+1,iz+1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix+1,iy-1,iz,  v,voidset);
-         voxelCount += FloodFillVoid(grid,ix+1,iy,  iz-1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix+1,iy,  iz+1,v,voidset);
-         voxelCount += FloodFillVoid(grid,ix+1,iy+1,iz,  v,voidset);
-                                                          
-         if(gFlags.cornerConnected)
+         /* Set this point as an assigned void                          */
+         grid->grid[ix][iy][iz] = voidset;
+         SET(grid->grid[ix][iy][iz], TYPE_ASSIGNED);
+         voxelCount++;
+         
+         if(v->pointlist == NULL)
          {
-            voxelCount += FloodFillVoid(grid,ix-1,iy-1,iz-1,v,voidset);
-            voxelCount += FloodFillVoid(grid,ix-1,iy-1,iz+1,v,voidset);
-            voxelCount += FloodFillVoid(grid,ix-1,iy+1,iz-1,v,voidset);
-            voxelCount += FloodFillVoid(grid,ix-1,iy+1,iz+1,v,voidset);
-            voxelCount += FloodFillVoid(grid,ix+1,iy-1,iz-1,v,voidset);
-            voxelCount += FloodFillVoid(grid,ix+1,iy-1,iz+1,v,voidset);
-            voxelCount += FloodFillVoid(grid,ix+1,iy+1,iz-1,v,voidset);
-            voxelCount += FloodFillVoid(grid,ix+1,iy+1,iz+1,v,voidset);
+            INIT((v->pointlist), POINTLIST);
+            p=v->pointlist;
+         }
+         else
+         {
+            p=v->pointlist;
+            LAST(p);
+            ALLOCNEXT(p, POINTLIST);
+         }
+         if(p==NULL)
+         {
+            fprintf(stderr,"No memory for voids point list\n");
+            exit(1);
+         }
+         
+         /* Put this grid->grid point into the point list               */
+         p->ix = ix;
+         p->iy = iy;
+         p->iz = iz;
+         p->x = (ix * grid->gridStep) + grid->xmin;
+         p->y = (iy * grid->gridStep) + grid->ymin;
+         p->z = (iz * grid->gridStep) + grid->zmin;
+         p->nearest = NULL;
+         
+         if(ix < v->ixmin) v->ixmin = ix;
+         if(iy < v->iymin) v->iymin = iy;
+         if(iz < v->izmin) v->izmin = iz;
+         if(ix > v->ixmax) v->ixmax = ix;
+         if(iy > v->iymax) v->iymax = iy;
+         if(iz > v->izmax) v->izmax = iz;
+         
+         /* Recurse to neighbouring points                              */
+         voxelCount += FloodFillVoid(grid,ix-1,iy,  iz,  v,voidset);
+         voxelCount += FloodFillVoid(grid,ix,  iy-1,iz,  v,voidset);
+         voxelCount += FloodFillVoid(grid,ix+1,iy,  iz,  v,voidset);
+         voxelCount += FloodFillVoid(grid,ix,  iy,  iz-1,v,voidset);
+         voxelCount += FloodFillVoid(grid,ix,  iy,  iz+1,v,voidset);
+         voxelCount += FloodFillVoid(grid,ix,  iy+1,iz,  v,voidset);
+         
+         if(gFlags.edgeConnected)
+         {
+            voxelCount += FloodFillVoid(grid,ix-1,iy-1,iz,  v,voidset);
+            voxelCount += FloodFillVoid(grid,ix-1,iy,  iz-1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix-1,iy,  iz+1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix-1,iy+1,iz,  v,voidset);
+            voxelCount += FloodFillVoid(grid,ix,  iy-1,iz-1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix,  iy-1,iz+1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix,  iy+1,iz-1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix,  iy+1,iz+1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix+1,iy-1,iz,  v,voidset);
+            voxelCount += FloodFillVoid(grid,ix+1,iy,  iz-1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix+1,iy,  iz+1,v,voidset);
+            voxelCount += FloodFillVoid(grid,ix+1,iy+1,iz,  v,voidset);
+            
+            if(gFlags.cornerConnected)
+            {
+               voxelCount += FloodFillVoid(grid,ix-1,iy-1,iz-1,v,voidset);
+               voxelCount += FloodFillVoid(grid,ix-1,iy-1,iz+1,v,voidset);
+               voxelCount += FloodFillVoid(grid,ix-1,iy+1,iz-1,v,voidset);
+               voxelCount += FloodFillVoid(grid,ix-1,iy+1,iz+1,v,voidset);
+               voxelCount += FloodFillVoid(grid,ix+1,iy-1,iz-1,v,voidset);
+               voxelCount += FloodFillVoid(grid,ix+1,iy-1,iz+1,v,voidset);
+               voxelCount += FloodFillVoid(grid,ix+1,iy+1,iz-1,v,voidset);
+               voxelCount += FloodFillVoid(grid,ix+1,iy+1,iz+1,v,voidset);
+            }
+         }
+
+         /* If not already assigned this void as being a surface void   */
+         if(!v->surfaceVoid)
+         {
+            /* If any of the fully-connected neighbouring points is 
+               solvent then set this as a surface void
+            */
+            for(i=-NUMGRIDNEIGHBOURS; i<=NUMGRIDNEIGHBOURS; i++)
+            {
+               for(j=-NUMGRIDNEIGHBOURS; j<=NUMGRIDNEIGHBOURS; j++)
+               {
+                  for(k=-NUMGRIDNEIGHBOURS; k<=NUMGRIDNEIGHBOURS; k++)
+                  {
+                     if(IsSolvent(grid, ix+i, iy+j, iz+k))
+                     {
+                        v->surfaceVoid = TRUE;
+                        /* Force break of all nested loops              */
+                        i=j=k=NUMGRIDNEIGHBOURS+1;
+                        break;
+                     }
+                  }
+               }
+            }
          }
       }
    }
@@ -1377,10 +1418,11 @@ void SetRadii(PDB *pdb)
 
    17.10.01 Original   By: ACRM
    17.06.02 V1.1
+   02.07.02 V1.2
 */
 void Usage(void)
 {
-   fprintf(stderr,"\navp V1.1 (c) 2001-2, Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\navp V1.2 (c) 2001-2, Dr. Andrew C.R. Martin, \
 University of Reading\n");
 
    fprintf(stderr,"\nUsage: avp [-q] [-g gridspacing] [-p probesize] \
@@ -1441,6 +1483,7 @@ very small diameter\n");
    17.10.01 Original   By: ACRM
    17.06.02 Added printing of largest individual void
    18.06.02 Added printing of void mid-point
+   02.07.02 Added printing of surfaceVoid flag
 */
 void PrintVoids(FILE *out, VOIDS *voids)
 {
@@ -1449,30 +1492,60 @@ void PrintVoids(FILE *out, VOIDS *voids)
    int   count  = 1,
          resnum = 2,
          atomnum = 2000;
-   REAL  totalVoidVolume   = (REAL)0.0,
-         largestVoidVolume = (REAL)0.0;
+   REAL  totalVoidVolume          = (REAL)0.0,
+         totalBuriedVoidVolume    = (REAL)0.0,
+         totalSurfaceVoidVolume   = (REAL)0.0,
+         largestVoidVolume        = (REAL)0.0,
+         largestBuriedVoidVolume  = (REAL)0.0,
+         largestSurfaceVoidVolume = (REAL)0.0;
    
    
    for(v=voids, resnum=2; v!=NULL; NEXT(v), resnum++)
    {
-      fprintf(out,"Void: %4d voxelCount: %3d volume: %.3f \
-midpoint: %.3f %.3f %.3f\n",
+      fprintf(out,"Void: %4d voxelCount: %3d volume: %8.3f \
+midpoint: %8.3f %8.3f %8.3f %s\n",
               count++, v->voxelCount, v->volume,
               (v->xmin + v->xmax)/2.0,
               (v->ymin + v->ymax)/2.0,
-              (v->zmin + v->zmax)/2.0);
+              (v->zmin + v->zmax)/2.0,
+              ((v->surfaceVoid)?"Surface-void":" Buried-void"));
       totalVoidVolume += v->volume;
       if(v->volume > largestVoidVolume)
       {
          largestVoidVolume = v->volume;
       }
 
+      if(v->surfaceVoid)
+      {
+         totalSurfaceVoidVolume += v->volume;
+         if(v->volume > largestSurfaceVoidVolume)
+         {
+            largestSurfaceVoidVolume = v->volume;
+         }
+      }
+      else
+      {
+         totalBuriedVoidVolume += v->volume;
+         if(v->volume > largestBuriedVoidVolume)
+         {
+            largestBuriedVoidVolume = v->volume;
+         }
+      }
+
       if(gFlags.printVoids)
       {
          for(p=v->pointlist; p!=NULL; NEXT(p))
          {
-            fprintf(gFlags.gridFile, "ATOM  %5d  O   GLY Z%4d    \
+            if(v->surfaceVoid)
+            {
+               fprintf(gFlags.gridFile, "ATOM  %5d  O   GLY X%4d    \
 %8.3f%8.3f%8.3f  1.00 20.00\n",  atomnum++, resnum, p->x, p->y, p->z);
+            }
+            else
+            {
+               fprintf(gFlags.gridFile, "ATOM  %5d  O   GLY Y%4d    \
+%8.3f%8.3f%8.3f  1.00 20.00\n",  atomnum++, resnum, p->x, p->y, p->z);
+            }
          }
       }
 
@@ -1497,6 +1570,16 @@ midpoint: %.3f %.3f %.3f\n",
       }
    }
 
+   fprintf(out, "\nTotal buried void volume: %f\n", 
+           totalBuriedVoidVolume);
+   fprintf(out, "Largest buried void volume: %f\n", 
+           largestBuriedVoidVolume);
+
+   fprintf(out, "\nTotal surface void volume: %f\n", 
+           totalSurfaceVoidVolume);
+   fprintf(out, "Largest surface void volume: %f\n", 
+           largestSurfaceVoidVolume);
+
    fprintf(out, "\nTotal void volume: %f\n", totalVoidVolume);
    fprintf(out, "Largest void volume: %f\n", largestVoidVolume);
 }
@@ -1516,6 +1599,9 @@ midpoint: %.3f %.3f %.3f\n",
 
    17.10.01 Original   By: ACRM
    31.01.01 Added code to build neighbours list
+   02.07.02 Modified so that the neighbour list is used internally
+            if it exists rather than having to step through the
+            neighbouring atoms in a separate routine
 */
 BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
               PDB **neighbours)
@@ -1539,10 +1625,11 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
    BOOL       retValue = FALSE;
    static BOOL warned = FALSE;
    
+   
    /* Create an index array into the PDB linked list which is sorted by
-      x coordinate
+      x coordinate - done on the first call only
    */
-   if(pdbArray==NULL)
+   if((pdbArray==NULL) && (pdb != NULL))
    {
       /* Malloc and populate pdbArray[] with PDB pointers               */
       if((pdbArray = IndexPDB(pdb, &natoms)) == NULL)
@@ -1559,16 +1646,7 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
    /* Atoms are only interesting if their coordinates lie between these
       limits
    */
-   if(neighbours == NULL)
-   {
-      xmin = x-(probeSize + MAXATOMRAD);
-      xmax = x+(probeSize + MAXATOMRAD);
-      ymin = y-(probeSize + MAXATOMRAD);
-      ymax = y+(probeSize + MAXATOMRAD);
-      zmin = z-(probeSize + MAXATOMRAD);
-      zmax = z+(probeSize + MAXATOMRAD);
-   }
-   else
+   if((neighbours==NULL) || (neighbours[0] == NULL))
    {
       xmin = x-(probeSize + RADEXPAND*MAXATOMRAD);
       xmax = x+(probeSize + RADEXPAND*MAXATOMRAD);
@@ -1576,18 +1654,19 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
       ymax = y+(probeSize + RADEXPAND*MAXATOMRAD);
       zmin = z-(probeSize + RADEXPAND*MAXATOMRAD);
       zmax = z+(probeSize + RADEXPAND*MAXATOMRAD);
-   }
-   start = FindFirstAtom(pdbArray, natoms, xmin);
-   stop  = FindLastAtom(pdbArray, natoms, xmax);
 
-   if((start==(-1)) || (stop==(-1)))
-      return(FALSE);
+      start = FindFirstAtom(pdbArray, natoms, xmin);
+      stop  = FindLastAtom(pdbArray, natoms, xmax);
+
+      if((start==(-1)) || (stop==(-1)))
+         return(FALSE);
+   }
    
    point.x = x;
    point.y = y;
    point.z = z;
    
-   if(neighbours==NULL)
+   if(neighbours==NULL) /* Not using a neighbour list                   */
    {
       for(i=start; i<=stop; i++)
       {
@@ -1605,38 +1684,72 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
          }
       }
    }
-   else
+   else /* neighbours pointer is non-null                               */
    {
-      for(i=start; i<=stop; i++)
+      if(neighbours[0] == NULL) /* Neighbours list not yet created      */
       {
-         if((pdbArray[i]->y >= ymin) &&
-            (pdbArray[i]->y <= ymax) &&
-            (pdbArray[i]->z >= zmin) &&
-            (pdbArray[i]->z <= zmax))
+         for(i=start; i<=stop; i++)
          {
-            cutoffSq  = (probeSize + pdbArray[i]->occ) * 
-                        (probeSize + pdbArray[i]->occ);
-            cutoff2Sq = (probeSize + RADEXPAND*pdbArray[i]->occ) * 
-                        (probeSize + RADEXPAND*pdbArray[i]->occ);
-            if(DISTSQ(pdbArray[i], &point) < cutoff2Sq)
+            if((pdbArray[i]->y >= ymin) &&
+               (pdbArray[i]->y <= ymax) &&
+               (pdbArray[i]->z >= zmin) &&
+               (pdbArray[i]->z <= zmax))
             {
-               if(neighbCount < MAXNEIGHBOURS)
+               /* Calculate cutoff for this being a clash               */
+               cutoffSq  = (probeSize + pdbArray[i]->occ) * 
+                           (probeSize + pdbArray[i]->occ);
+
+               /* Calculate cutoff for neighbour list                   */
+               cutoff2Sq = (probeSize + RADEXPAND*pdbArray[i]->occ) * 
+                           (probeSize + RADEXPAND*pdbArray[i]->occ);
+
+               /* Add to neighbour list if near enough                  */
+               if(DISTSQ(pdbArray[i], &point) < cutoff2Sq)
                {
-                  neighbours[neighbCount++] = pdbArray[i];
-               }
-               else
-               {
-                  if(!warned)
+                  if(neighbCount < MAXNEIGHBOURS)
                   {
-                     fprintf(stderr,"Max number of atoms neighbouring \
+                     neighbours[neighbCount++] = pdbArray[i];
+                  }
+                  else
+                  {
+                     if(!warned)
+                     {
+                        fprintf(stderr,"Max number of atoms neighbouring \
 a grid point exceeded. Increase MAXNEIGHBOURS\n");
-                     warned = TRUE;
+                        warned = TRUE;
+                     }
+                  }
+
+                  /* If it was actually close enough to clash, then set
+                     the return value
+                  */
+                  if(DISTSQ(pdbArray[i], &point) < cutoffSq)
+                  {
+                     retValue = TRUE;
                   }
                }
-               if(DISTSQ(pdbArray[i], &point) < cutoffSq)
-               {
-                  retValue = TRUE;
-               }
+            }
+         }
+      }
+      else /* We already have a neighbour list                          */
+      {
+         /* Run through the neighbour list                              */
+         for(i=0; i<MAXNEIGHBOURS; i++)
+         {
+            PDB *p = neighbours[i];
+            
+            if(p==NULL) /* Exit if we have run out of entries           */
+            {
+               break;
+            }
+
+            /* Calculate the cutoff and see if we are in range          */
+            cutoffSq = (probeSize+neighbours[i]->occ) * 
+                       (probeSize+neighbours[i]->occ);
+            if(DISTSQ(neighbours[i], &point) < cutoffSq)
+            {
+               retValue = TRUE;
+               break;
             }
          }
       }
@@ -1833,6 +1946,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
    Recursive routine for solvent flood filling
 
    31.10.01 Original   By: ACRM
+   02.07.02 Uses neighbour list in calls to AtomNear()
 */
 void FloodFillSolvent(GRID *grid, PDB *pdb, int ix, int iy, int iz, 
                       REAL solvSize, REAL solvRadiusSq,
@@ -1859,7 +1973,7 @@ void FloodFillSolvent(GRID *grid, PDB *pdb, int ix, int iy, int iz,
                    grid->xmin + ix*grid->gridStep,
                    grid->ymin + iy*grid->gridStep,
                    grid->zmin + iz*grid->gridStep,
-                   solvSize, NULL))
+                   solvSize, grid->neighbours[ix][iy][iz]))
       {
          SetAsSolvent(grid,ix,iy,iz,
                       numberOfSolvatedNeighbours, 
@@ -1992,6 +2106,7 @@ void FlagBoxBoundsAsSolvent(GRID *grid, int ixmax, int iymax, int izmax,
             SOLVENT_MARGIN where this point has solvent neighbours, but
             is too close to an atom (previously was just 'FALSE')
             Also now accepts xoff,yoff,zoff offsets 
+   02.07.02 Uses neighbour list in calls to AtomNear()
 */
 int AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
                       REAL solvSize, REAL xoff, REAL yoff, REAL zoff)
@@ -2035,7 +2150,7 @@ int AdjacentIsSolvent(PDB *pdb, GRID *grid, int ix, int iy, int iz,
                       grid->xmin + ix*grid->gridStep + xoff, 
                       grid->ymin + iy*grid->gridStep + yoff, 
                       grid->zmin + iz*grid->gridStep + zoff, 
-                      solvSize, NULL))
+                      solvSize, grid->neighbours[ix][iy][iz]))
          {
             return(SOLVENT_BULK);
          }
@@ -2100,7 +2215,7 @@ BOOL MarkSolventPoints(PDB *pdb, GRID *grid, REAL solventStep,
                           grid->ixmax-1, grid->iymax-1, grid->izmax-1,
                           quiet);
    
-   /* Then work from each of the 6 faces marking any point at solvent if 
+   /* Then work from each of the 6 faces marking any point as solvent if 
       it has an adjacent solvent point. Somehow need to account for being 
       able to fit solvent molecules in through any passage to the outside 
       world
@@ -2655,7 +2770,7 @@ int RefineVoxelNeighbours(GRID *grid, PDB *pdb, POINTLIST *pt,
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  0,  0, -1, 
                                    fineGridStep, fineProbeSize);
    
-#ifndef NO_EXTRAS
+#ifndef NO_EXTRA_VOXEL_NEIGHBOURS
    /* Look at the 12 edge-neighbours                                    */
    vcount += RefineAVoxelNeighbour(grid, pdb, pt,  -1,  -1,  0, 
                                    fineGridStep, fineProbeSize);
@@ -2852,3 +2967,35 @@ nextatom:
       ;
    }
 }
+
+
+/************************************************************************/
+/*>BOOL IsSolvent(GRID *grid, int ix, int iy, int iz)
+   --------------------------------------------------
+   Input:     GRID   *grid       Grid structure
+              int    ix,iy,iz    Position on grid
+   Returns:   BOOL               Is this a solvent point?
+
+   Tests whether a specified point is on the grid and if so is it
+   solvent?
+
+   02.07.02 Original   By: ACRM
+*/
+BOOL IsSolvent(GRID *grid, int ix, int iy, int iz)
+{
+   if((ix>=0) && (ix<grid->ixmax) &&
+      (iy>=0) && (iy<grid->iymax) &&
+      (iz>=0) && (iz<grid->izmax))
+   {
+      if((grid->grid[ix][iy][iz] == TYPE_SOLVENT) ||
+         (grid->grid[ix][iy][iz] == TYPE_SOLVENT2))
+      {
+         return(TRUE);
+      }
+   }
+   
+   return(FALSE);
+}
+
+
+

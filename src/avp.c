@@ -1533,12 +1533,14 @@ void SetRadii(PDB *pdb)
    17.10.01 Original   By: ACRM
    17.06.02 V1.1
    02.07.02 V1.2
-   09.07.02 V1.4 - added -R
+   09.07.02 added -R
+   18.08.08 V1.3
+   31.07.17 V1.4
 */
 void Usage(void)
 {
-   fprintf(stderr,"\navp V1.3 (c) 2001-2, Dr. Andrew C.R. Martin, \
-University of Reading\n");
+   fprintf(stderr,"\navp V1.4 (c) 2001-17, Dr. Andrew C.R. Martin, \
+University of Reading, UCL\n");
 
    fprintf(stderr,"\nUsage: avp [-q] [-g gridspacing] [-p probesize] \
 [-s solventsize]\n");

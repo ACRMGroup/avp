@@ -1352,10 +1352,8 @@ void FindNearestAtoms(PDB *pdb, VOIDS *voids)
 
       for(p=v->pointlist; p!=NULL; NEXT(p))
       {
-         PDB *tmp;
-         tmp = FindTheNearestAtom(pdb, p);
-#pragma omp critical
-         p->nearest = tmp;
+#pragma omp atomic write
+         p->nearest = FindTheNearestAtom(pdb, p);
       }
    }
 #else

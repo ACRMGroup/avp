@@ -1729,6 +1729,7 @@ BOOL AtomNear(PDB *pdb, REAL x, REAL y, REAL z, REAL probeSize,
 
 {
    static PDB **pdbArray = NULL;
+#pragma omp threadprivate(pdbArray)
    static int natoms     = 0;
    VEC3F      point;
    REAL       cutoffSq,

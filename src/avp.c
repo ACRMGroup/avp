@@ -1327,7 +1327,7 @@ void FindNearestAtoms(PDB *pdb, VOIDS *voids)
    VOIDS *v;
    POINTLIST *p;
 
-#ifdef OMP
+#ifdef _OPENMP
    VOIDS **voidarray;
    int   nvoids, i;
 

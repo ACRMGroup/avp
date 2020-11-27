@@ -1,0 +1,16 @@
+CC    = gcc
+COPT = -fopenmp -DOMP -O3 -Wall -ansi -pedantic -I$(HOME)/include  -Wno-unknown-pragmas
+LOPT = -L$(HOME)/lib
+LIBS = -lbiop -lgen -lm -lxml2 -lgomp
+OFILES = avp.o RayBox.o
+IFILES = raybox.h
+
+avp : $(OFILES)
+	$(CC) $(LOPT) -o $@ $(OFILES) $(LIBS)
+
+.c.o : $(IFILES)
+	$(CC) $(COPT) -o $@ -c $<
+
+clean : 
+	\rm $(OFILES) $(LFILES)
+

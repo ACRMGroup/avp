@@ -4,12 +4,12 @@
    Program:    avp (Another Void Program)
    File:       avp.c
    
-   Version:    V1.4
-   Date:       31.07.17
+   Version:    V1.5
+   Date:       27.11.20
    Function:   Find voids in proteins
    
-   Copyright:  (c) University of Reading / Dr. Andrew C. R. Martin 2001-17
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c)University of Reading/Prof. Andrew C.R. Martin 2001-20
+   Author:     Prof. Andrew C. R. Martin
    Address:    School of Animal and Microbial Sciences,
                The University of Reading,
                Whiteknights,
@@ -1518,75 +1518,6 @@ void SetRadii(PDB *pdb)
          p->occ = 1.87;
       }
    }
-}
-
-
-/************************************************************************/
-/*>void Usage(void)
-   ----------------
-   Input:     
-   Output:    
-   Returns:   
-
-   Prints a usage message
-
-   17.10.01 Original   By: ACRM
-   17.06.02 V1.1
-   02.07.02 V1.2
-   09.07.02 added -R
-   18.08.08 V1.3
-   31.07.17 V1.4
-   27.11.20 V1.5
-*/
-void Usage(void)
-{
-   fprintf(stderr,"\navp V1.5 (c) 2001-20, Prof. Andrew C.R. Martin, \
-University of Reading, UCL\n");
-
-   fprintf(stderr,"\nUsage: avp [-q] [-g gridspacing] [-p probesize] \
-[-s solventsize]\n");
-   fprintf(stderr,"           [-r] [-e] [-c] [-o[a][s] file] \n");
-   fprintf(stderr,"           [-f file] [-l] [-n file] [-O(xyz) value] \
-[-w] [-S] [file.pdb [file.out]]\n");
-
-   fprintf(stderr,"   -q Quiet - do not report progress\n");
-   fprintf(stderr,"   -g Specify the grid spacing (Default: %f)\n",
-           DEFAULT_GRID_SIZE);
-   fprintf(stderr,"   -p Specify the probe size (Default: %f)\n",
-           DEFAULT_PROBE_SIZE);
-   fprintf(stderr,"   -s Specify the solvent size (Default: %f)\n",
-           DEFAULT_WATER_SIZE);
-   fprintf(stderr,"   -r Refine void sizes\n");
-   fprintf(stderr,"   -R Redefine void points and refine void sizes\n");
-   fprintf(stderr,"   -e Assign points to voids with edge connections\n");
-   fprintf(stderr,"   -c Assign points to voids with corner connections \
-(implies -e)\n");
-   fprintf(stderr,"   -o Output the void grid points to file. With 'a', \
-also output atom\n");
-   fprintf(stderr,"      grid points; with 's', also output solvent grid \
-points\n");
-   fprintf(stderr,"   -f Output the refined void points to a file. Used \
-with -r\n");
-   fprintf(stderr,"   -l Include protein voxels next to void and solvent \
-in volume refinement\n");
-   fprintf(stderr,"   -n Output atom records for atoms nearest to each \
-void to file.\n");
-   fprintf(stderr,"   -Ox -Oy -Oz Specify an offset for the grid\n");
-   fprintf(stderr,"   -w Print a list of waters that neighbour voids\n");
-   fprintf(stderr,"   -S Reassign surface protein to solvent if can \
-fit a solvent near\n");
-
-   fprintf(stderr,"\navp (Another Void Program) is a program to \
-calculate void volumes in\n");
-   fprintf(stderr,"proteins. It uses a simple grid-based method but \
-separates the probe\n");
-   fprintf(stderr,"size used to define void points as being voids (-p) \
-from the probe\n");
-   fprintf(stderr,"size used to define channels to the surface (-s). \
-Thus one can find\n");
-   fprintf(stderr,"very small voids without these being connected via \
-very small diameter\n");
-   fprintf(stderr,"passages to the surface.\n\n");
 }
 
 
@@ -3842,3 +3773,79 @@ Increase MAXNEIGHBOURS!\n");
 
    return(numNeighbours);
 }
+
+
+/************************************************************************/
+/*>void Usage(void)
+   ----------------
+   Input:     
+   Output:    
+   Returns:   
+
+   Prints a usage message
+
+   17.10.01 Original   By: ACRM
+   17.06.02 V1.1
+   02.07.02 V1.2
+   09.07.02 added -R
+   18.08.08 V1.3
+   31.07.17 V1.4
+   27.11.20 V1.5 - now prints to stdout!
+*/
+void Usage(void)
+{
+   printf("\navp V1.5");
+#ifdef OMP
+   printf("[OMP]");
+#endif
+   printf(" (c) 2001-20, Prof. Andrew C.R. Martin, \
+University of Reading, UCL\n");
+
+   printf("\nUsage: avp [-q] [-g gridspacing] [-p probesize] \
+[-s solventsize]\n");
+   printf("           [-r] [-e] [-c] [-o[a][s] file] \n");
+   printf("           [-f file] [-l] [-n file] [-O(xyz) value] \
+[-w] [-S]\n");
+   printf("           [file.pdb [file.out]]\n");
+
+   printf("   -q Quiet - do not report progress\n");
+   printf("   -g Specify the grid spacing (Default: %f)\n",
+           DEFAULT_GRID_SIZE);
+   printf("   -p Specify the probe size (Default: %f)\n",
+           DEFAULT_PROBE_SIZE);
+   printf("   -s Specify the solvent size (Default: %f)\n",
+           DEFAULT_WATER_SIZE);
+   printf("   -r Refine void sizes\n");
+   printf("   -R Redefine void points and refine void sizes\n");
+   printf("   -e Assign points to voids with edge connections\n");
+   printf("   -c Assign points to voids with corner connections \
+(implies -e)\n");
+   printf("   -o Output the void grid points to file. With 'a', \
+also output atom\n");
+   printf("      grid points; with 's', also output solvent grid \
+points\n");
+   printf("   -f Output the refined void points to a file. Used \
+with -r\n");
+   printf("   -l Include protein voxels next to void and solvent \
+in volume refinement\n");
+   printf("   -n Output atom records for atoms nearest to each \
+void to file.\n");
+   printf("   -Ox -Oy -Oz Specify an offset for the grid\n");
+   printf("   -w Print a list of waters that neighbour voids\n");
+   printf("   -S Reassign surface protein to solvent if can \
+fit a solvent near\n");
+
+   printf("\navp (Another Void Program) is a program to \
+calculate void volumes in\n");
+   printf("proteins. It uses a simple grid-based method but \
+separates the probe\n");
+   printf("size used to define void points as being voids (-p) \
+from the probe\n");
+   printf("size used to define channels to the surface (-s). \
+Thus one can find\n");
+   printf("very small voids without these being connected via \
+very small diameter\n");
+   printf("passages to the surface.\n\n");
+}
+
+

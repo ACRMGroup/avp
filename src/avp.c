@@ -148,6 +148,8 @@
    V1.2a xx.07.02 Added solvent point reassignment
    V1.3  18.08.08 Added OPENMP code
    V1.4  31.07.17 Cleanup for new biolip
+   V1.5  27.11.20 Merged in Gil Hoben's patches for OpenMP and compilation
+                  with GCC
 
 *************************************************************************/
 /* Program options
@@ -1534,10 +1536,11 @@ void SetRadii(PDB *pdb)
    09.07.02 added -R
    18.08.08 V1.3
    31.07.17 V1.4
+   27.11.20 V1.5
 */
 void Usage(void)
 {
-   fprintf(stderr,"\navp V1.4 (c) 2001-17, Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\navp V1.5 (c) 2001-20, Prof. Andrew C.R. Martin, \
 University of Reading, UCL\n");
 
    fprintf(stderr,"\nUsage: avp [-q] [-g gridspacing] [-p probesize] \

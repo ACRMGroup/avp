@@ -2,7 +2,7 @@ CC    = cc
 # To allow decompression of gzipped PDB files on the fly, uncomment
 # this line
 # GUNZIP = -DGUNZIP_SUPPORT
-COPT = -O2 -Wall -ansi -pedantic -I./include $(GUNZIP) -Wno-unknown-pragmas -Wno-unused-function
+COPT = -O2 -Wall -ansi -pedantic -I./bioplib $(GUNZIP) -Wno-unknown-pragmas -Wno-unused-function
 OFILES = avp.o RayBox.o
 IFILES = raybox.h
 

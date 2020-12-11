@@ -1,5 +1,8 @@
 CC    = gcc
-COPT = -fopenmp -DOMP -O3 -Wall -ansi -pedantic -I$(HOME)/include  -Wno-unknown-pragmas
+# To allow decompression of gzipped PDB files on the fly, uncomment
+# this line
+# GUNZIP = -DGUNZIP_SUPPORT
+COPT = -fopenmp -DOMP -O3 -Wall -ansi -pedantic -I$(HOME)/include -Wno-unknown-pragmas $(GUNZIP)
 LOPT = -L$(HOME)/lib
 LIBS = -lbiop -lgen -lm -lxml2 -lgomp
 OFILES = avp.o RayBox.o

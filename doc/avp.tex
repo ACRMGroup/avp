@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{a4}
+\usepackage{tabularx}
 \newcommand{\degree}{\mbox{${}^{\circ}$}}
 \newcommand{\sub}[1]{\kern-.1em \lower.5ex\hbox{\scriptsize #1}}
 \newcommand{\super}[1]{\kern-.1em \raisebox{1ex}{\scriptsize #1}}
@@ -9,11 +10,12 @@
 \title{AVP --- Another Void Program}
 \author{Andrew C.R. Martin\\
 \vspace*{1ex}\\
-Department of biochemistry and Molecular Biology,\\
+Institute of Structural and Molecular Biology,\\
+Division of Biosciences,\\
 University College London,\\
 Gower Street,\\
 London WC1E 6BT}
-\date{14th September, 2004}
+\date{14th September, 2004\\Updated 11th December, 2020}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -113,8 +115,19 @@ void probe size must be specified with -p.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Usage}
 
+\noindent {\bfseries Recommended use is:}
+\vspace{1em}
+
+\setlength{\fboxrule}{2pt}
+\setlength{\fboxsep}{2mm}
+\framebox[\linewidth][c]{\tt avp -R -p 0.5 file.pdb file.out}
+\vspace{1em}
+
+
+
 \begin{verbatim}
-avp V1.3 (c) 2001-2, Dr. Andrew C.R. Martin, University of Reading
+avp V1.5 (c) 2001-20, Prof. Andrew C.R. Martin, University of Reading,
+                      UCL
 
 Usage: avp [-q] [-g gridspacing] [-p probesize] [-s solventsize]
            [-r] [-e] [-c] [-o[a][s] file] 
@@ -161,29 +174,30 @@ diameter passages to the surface.
 \item[-s] Specify the solvent size. Rarely necessary to change the
   default value which is the size of a water molecule. (Default: 1.400000)
 \item[-r] Refine void sizes
-  This (or -R) is absolutely required. Without it you will only get a
+  This (or \verb|-R|) is absolutely required. Without it you will only get a
   rough approximation of the void size. Refinement of the void sizes
   splits each voxel into 1000 sub-voxels to fine-tune the void size.
-\item[-R] This does a -r, but also provides off-grid refinements to
+\item[-R] This does a \verb|-r|, but also provides off-grid refinements to
   minimize the effect of grid orientation. This is the recommended default.
 \item[-e] Void clustering, by default, only clusters voxels if they
   are face connected. This adds edge-connected voxels. Whether you use
   this depends on your definition of a distinct void!
-\item[-c] Assign points to voids with corner connections. As -e, but
+\item[-c] Assign points to voids with corner connections. As \verb|-e|, but
   also adds corner connected voxels.
-\item[-o] Output the void grid points to a file. If you use -oa, then
-  it will also output grid points assigned as atoms; if you use -os,
+\item[-o] Output the void grid points to a PDB file. If you use \verb|-oa|, then
+  it will also output grid points assigned as atoms; if you use \verb|-os|,
   then points assigned as solvent will also be output. (You can also
-  to -oas)
-\item[-f] Output the refined void points to a file (i.e. the 1000 per
-  original voxel). Used with -r or -R. This is really just for
+  do -oas). The resulting output file is described in
+  Section~\ref{sec:voidsfile}.
+\item[-f] Output the refined void points to a file (i.e.\ the 1000 per
+  original voxel). Used with \verb|-r| or \verb|-R|. This is really just for
   debugging the void refinement process since there are too many
   points to use effectively.
 \item[-l] Include protein voxels next to void and solvent in volume 
   refinement. The voxel refinement normally includes only the voxels
   initially defined as void. Including this option also looks at the
   adjacent protein voxels (which may be part void). This is useful
-  with -r, but the additional off-grid refinement provided by -R means
+  with \verb|-r|, but the additional off-grid refinement provided by \verb|-R| means
   it is less useful.
 \item[-n] Output atom records for atoms nearest to each void to
   file. This is only partially implemented, but prints the atoms which
@@ -197,14 +211,39 @@ diameter passages to the surface.
 \item[-S] Reassign surface protein to solvent if can fit a solvent
   near. This is the second phase of off-grid refinement. However,
   testing has shown that it does not add much to the lack of
-  grid-orientation sensitivity compared with -R.
+  grid-orientation sensitivity compared with \verb|-R|.
 \end{description}
+\vspace{1em}
 
-Recommended use is therefore:
+\noindent {\bfseries Recommended use is:}
+\vspace{1em}
 
-\begin{verbatim}
-avp -R -p 0.5 file.pdb file.out
-\end{verbatim}
+\setlength{\fboxrule}{2pt}
+\setlength{\fboxsep}{2mm}
+\framebox[\linewidth][c]{\tt avp -R -p 0.5 file.pdb file.out}
+\vspace{1em}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Void point output file}
+\label{sec:voidsfile}
+
+If you use the \verb|-o| option, you will obtain a PDB file containing
+the void points. Typically you would merge this with the original PDB
+file (\verb|cat original.pdb voids.pdb > both.pdb|) and view the
+combined file with something like RasMol or PyMol, rendering the voids
+as spacefilled spheres.
+
+The following chain labels are used:
+\vspace{1em}
+
+\noindent\begin{tabularx}{\textwidth}{lX}
+  X & `Surface voids' --- these are void points next to the water accessible
+      surface, but not forming a channel to water. \\
+  Y & Fully buried void points. \\
+  Z & When using \verb|-oa|, Atom grid points. \\
+    & When using \verb|-os|, Solvent grid points. \\
+\end{tabularx}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -212,24 +251,33 @@ avp -R -p 0.5 file.pdb file.out
 Unpack the distribution file:
 
 \begin{verbatim}
-gzip -d AVP1.3.tar.gz
-tar xvf AVP1.3.tar
+gzip -d AVP1.5.tar.gz
+tar xvf AVP1.5.tar
 \end{verbatim}
 
 If you are using GNU tar, you can combine these two steps:
 
 \begin{verbatim}
-tar zxvf AVP1.3.tar.gz
+tar zxvf AVP1.5.tar.gz
 \end{verbatim}
 
-This will create a directory, AVP1.3
+This will create a directory, AVP1.5
 
 Now enter the src sub-directory and type make to build the software:
 
 \begin{verbatim}
-cd AVP1.3/src
+cd AVP1.5/src
 make
 \end{verbatim}
+
+With recent versions of the GCC C~compiler, you can also compile to
+use multiple cores with OpenMP:
+
+\begin{verbatim}
+cd AVP1.5/src
+make -f Makefile_gcc.omp
+\end{verbatim}
+
 
 Finally copy the executable to somewhere appropriate:
 
@@ -342,6 +390,17 @@ a more accurate evaluation of void volume reducing leakage of voids to
 the protein surface.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Citing AVP}
+
+If you use AVP in your research, please cite the following paper:
+\vspace{1em}
+
+\noindent Cuff, A. L. \& Martin, A. C. R. (2004) Analysis of void
+volumes in proteins and application to stability of the p53 tumour
+suppressor protein. \emph{J. Mol. Biol.} {\bfseries 344}, 1199--1209.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \bibliographystyle{jmb}
 \bibliography{abbrev,lit2}
